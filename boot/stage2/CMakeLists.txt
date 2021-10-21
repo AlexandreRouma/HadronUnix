@@ -21,8 +21,10 @@ file(GLOB_RECURSE SRC "src/*.c" "src/*.asm")
 
 add_executable(stage2_elf ${SRC})
 
+target_include_directories(stage2_elf PRIVATE "src/")
+
 add_custom_command(OUTPUT stage2.bin
-    COMMAND i686-elf-objcopy -O binary stage2_elf stage2.bin
+    COMMAND i686-elf-objcopy -O binary stage2_elf stage2.bin && sh ../../../tools/fill_stage2_header.sh stage2.bin
     DEPENDS stage2_elf
     COMMENT "Creating stage2 binary image"
 )

@@ -5,7 +5,7 @@ SECTION .header
 GLOBAL stage2_header
 stage2_header:
     dd 0DEADBEEFh
-    dd stage2_end - stage2_header
+    dd 0
     jmp stage2_start
 
 ; First thing to be called
@@ -24,8 +24,3 @@ stage2_start:
 stage2_hlt:
     hlt
     jmp stage2_hlt
-
-; Detect end of stage2
-SECTION .sizedetect
-GLOBAL stage2_end
-stage2_end:

@@ -2,21 +2,26 @@
 
 set -e
 
+# Save arguments
 OUTPUT_IMG=$1
 STAGE1_BIN=$2
 STAGE2_BIN=$3
 BOOTFS_IMG=$4
 
+# Get needed variables
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+# Calculate sizes
+STAGE2_BIN_SIZE_BYTES=$(stat $STAGE2_BIN -c %s)
+STAGE2_BIN_SIZE_SECTORS=$(((($STAGE2_BIN_SIZE_BYTES - 1) / 512) + 1))
+
+OUTPUT_IMG_SIZE_SECTORS=$((1 + $STAGE2_BIN_SIZE_SECTORS))
 
 # Include utilities
 . $SCRIPT_DIR/binary_utils.sh
 
-# Config
-IMAGE_SECTOR_COUNT=2880
-
 # Create blank image
-dd if=/dev/zero of=$OUTPUT_IMG bs=512 count=$IMAGE_SECTOR_COUNT status=none
+dd if=/dev/zero of=$OUTPUT_IMG bs=512 count=$OUTPUT_IMG_SIZE_SECTORS status=none
 
 # Write boot sector
 dd if=$STAGE1_BIN of=$OUTPUT_IMG conv=notrunc bs=512 count=1 status=none

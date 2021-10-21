@@ -1,19 +1,20 @@
 BITS 16
-;ORG 7C00h
 SECTION .boot
 
 GLOBAL stage1_start
 stage1_start:
-    jmp start
+    ; Enforce CS:IP
+    jmp 0:start
 
 %include "drive.asm"
 %include "screen.asm"
 %include "gdt.asm"
 
 ; In sectors
-stage2_size: dd 0
+stage2_size: dw 0
 
 start:
+    xchg bx, bx
     ; Save boot data
     mov [drive_number], dl
 
@@ -30,18 +31,17 @@ start:
     mov sp, 7B00h
     mov bp, sp
 
-    ; Get drive info
+    ; Get information about the structure of the drivfe
     call drive_update_info
 
     ; Read first data sector
+    mov bl, 1
+    xor eax, eax
+    inc eax
+    mov dl, [drive_number]
+    mov si, 7E00h
     xor cx, cx
     mov es, cx
-    mov al, 1
-    mov ch, 0
-    mov dh, 0
-    mov cl, 2
-    mov bx, 7E00h
-    mov dl, [drive_number]
     call drive_read_sectors
 
     ; Decode signature
@@ -56,40 +56,28 @@ start:
     xor edx, edx
     div ebx
     inc eax
-    mov [stage2_size], eax
+    mov [stage2_size], ax
     
-    ; Load sectors (LBA is 1 because we read it right before)
-    mov bx, 7E0h
-    mov es, bx
-    mov eax, 1
+    ; Load following sectors
+    mov cx, 7C0h
+    xor eax, eax
 load_loop:
-    ; Increment LBA
     inc eax
-    mov bx, es
-    add bx, 32
-    mov es, bx
+    add cx, 32
 
-    ; Calculate CHS address
-    push eax
-    push es
-    call drive_lba_to_chs
-
-    ; Read sector
-    mov al, 1
+    mov bl, 1
     mov dl, [drive_number]
-    xor bx, bx
-    pop es
-    push es
-    call drive_read_sectors
-    pop es
-    pop eax
-    
-    ; Check if done
-    cmp eax, [stage2_size]
-    jb load_loop
+    mov es, cx
+    xor si, si
 
-    ; Breakpoint
-    ; xchg bx, bx
+    push eax
+    push cx
+    call drive_read_sectors
+    pop cx
+    pop eax
+
+    cmp ax, [stage2_size]
+    jb load_loop
 
     ; Switch to protected mode
     cli

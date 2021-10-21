@@ -1,18 +1,9 @@
-drive_number: db 0
-drive_sector_per_track: db 0
-drive_head_count: db 0
-
-; AL = Number of sectors
-; CH = Cylinder
-; CL = Sector
-; DH = Head
-; DL = Drive
-; ES:BX = Buffer Pointer
-drive_read_sectors:
-    mov ah, 02h
-    int 13h
-    jc dump_drive_error
-    ret
+drive_number:
+    db 0
+drive_sector_per_track:
+    db 0
+drive_head_count:
+    db 0
 
 ; DL = Drive
 drive_update_info:
@@ -25,29 +16,52 @@ drive_update_info:
     jc dump_drive_error
 
     ; Decode info
+    and cl, 111111b
     inc dh
-    and cx, 111111b
     mov [drive_head_count], dh
     mov [drive_sector_per_track], cl
-
     ret
 
+; BL = Number of sectors
 ; EAX = LBA
-; Returns:
-; CL = Sector
-; DH = Head
-; CH = Cylinder
-drive_lba_to_chs:
-    xor ebx, ebx
-    mov bl, [drive_sector_per_track]
+; DL = Drive Number
+; ES:SI = Buffer Pointer
+drive_read_sectors:
+    push dx
+
+    ; Calculate TEMP and Sector - 1
     xor edx, edx
-    div ebx
-    mov cl, dl
-    inc cl
-    xor ebx, ebx
-    mov bl, [drive_head_count]
+    xor ecx, ecx
+    mov cl, [drive_sector_per_track]
+    div ecx
+
+    ; Save sector
+    inc dl
+    push dx
+
+    ; Calculate Head and Cylinder
     xor edx, edx
-    div ebx
-    mov dh, dl
+    xor ecx, ecx
+    mov cl, [drive_head_count]
+    div ecx
+
+    ; Stack: Sector, EAX: Cylinder, EDX: Head
+    pop cx
     mov ch, al
+    shr ax, 2
+    and al, 0C0h
+    or cl, al
+    mov dh, dl
+
+    ; Set the drive number, sector count and buffer
+    pop ax
+    mov dl, al
+    mov al, bl
+    mov bx, si
+
+    ; Call BIOS
+    mov ah, 02h
+    int 13h
+
+    jc dump_drive_error
     ret

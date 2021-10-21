@@ -1,22 +1,9 @@
-
+#include <vga_basic/vga.h>
 
 void stage2_main() {
-    unsigned short* fb = (unsigned short*)0xB8000;
+    // Initialize VGA driver
+    vga_init(80, 25);
 
-    for (int i = 0; i < 2000; i++) {
-        fb[i] = 0;
-    }
-
-    fb[0] = 'H' | (0b1110 << 8);
-    fb[1] = 'e' | (0b1110 << 8);
-    fb[2] = 'l' | (0b1110 << 8);
-    fb[3] = 'l' | (0b1110 << 8);
-    fb[4] = 'o' | (0b1110 << 8);
-    fb[5] = ' ' | (0b1110 << 8);
-    fb[6] = 'W' | (0b1110 << 8);
-    fb[7] = 'o' | (0b1110 << 8);
-    fb[8] = 'r' | (0b1110 << 8);
-    fb[9] = 'l' | (0b1110 << 8);
-    fb[10] = 'd' | (0b1110 << 8);
-    fb[11] = '!' | (0b1110 << 8);
+    vga_print("Doin yo mom");
+    vga_ok(true);
 }

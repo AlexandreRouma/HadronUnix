@@ -14,7 +14,6 @@ stage1_start:
 stage2_size: dw 0
 
 start:
-    xchg bx, bx
     ; Save boot data
     mov [drive_number], dl
 

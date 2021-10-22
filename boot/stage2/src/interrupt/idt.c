@@ -12,6 +12,9 @@ void idt_init() {
     for (int i = 0; i < IDT_ENTRY_COUNT; i++) {
         idt_clear_gate(i);
     }
+
+    // Load the IDT
+    asm ("lidt %0" : : "m"(_K_IDTR_));
 }
 
 void idt_set_gate(uint8_t id, uint32_t offset, uint16_t segment, uint8_t gate_type, uint8_t gate_size, uint8_t dpl) {
@@ -36,8 +39,4 @@ void idt_clear_gate(uint8_t id) {
     _K_IDT_[id].dpl = 0;
     _K_IDT_[id].present = 0;
     _K_IDT_[id].offset_high = 0;
-}
-
-void idt_load() {
-    asm ("lidt %0" : : "m"(_K_IDTR_));
 }

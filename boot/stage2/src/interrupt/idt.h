@@ -25,12 +25,11 @@ struct idt_gate_descriptor {
 typedef struct idt_gate_descriptor idt_gate_descriptor_t;
 
 struct idt_register {
-    uint16_t base;
-    uint32_t limit;
+    uint16_t limit;
+    uint32_t base;
 }__attribute__((aligned(8),packed));
 typedef struct idt_register idt_register_t;
 
 void idt_init();
 void idt_set_gate(uint8_t id, uint32_t offset, uint16_t segment, uint8_t gate_type, uint8_t gate_size, uint8_t dpl);
 void idt_clear_gate(uint8_t id);
-void idt_load();

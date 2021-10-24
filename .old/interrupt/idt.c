@@ -1,11 +1,11 @@
 #include <interrupt/idt.h>
 
-idt_register_t _K_IDTR_;
-idt_gate_descriptor_t _K_IDT_[IDT_ENTRY_COUNT];
+idt_register_t _K_IDTR_ __attribute__((aligned(8)));
+idt_gate_descriptor_t _K_IDT_[IDT_ENTRY_COUNT] __attribute__((aligned(8)));
 
 void idt_init() {
     // Setup IDTR
-    _K_IDTR_.base = &_K_IDT_;
+    _K_IDTR_.base = (uint32_t)&_K_IDT_;
     _K_IDTR_.limit = sizeof(_K_IDT_) - 1;
 
     // Clear all entries

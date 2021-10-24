@@ -8,7 +8,7 @@ drive_head_count:
 ; DL = Drive
 drive_update_info:
     ; Get drive info from BIOS
-    mov ax, 0
+    xor ax, ax
     mov es, ax
     mov di, ax
     mov ah, 08h

@@ -18,6 +18,8 @@ stage2_start:
     mov ebp, esp
 
     ; Call bootloader main
+    and edx, 0FFh
+    push edx
     call stage2_main
 
 ; Catch if stage2_main returns

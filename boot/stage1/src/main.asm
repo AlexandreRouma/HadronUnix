@@ -19,12 +19,11 @@ start:
 
     ; Set segment registers
     xor ax, ax
-    mov cx, ax
-    mov dx, ax
-    mov ss, ax
+    mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
+    mov ss, ax
 
     ; Prepare the stack
     mov sp, 7B00h
@@ -58,8 +57,9 @@ start:
     mov [stage2_size], ax
     
     ; Load following sectors
-    mov cx, 7C0h
+    mov cx, 7E0h
     xor eax, eax
+    inc al
 load_loop:
     inc eax
     add cx, 32
@@ -77,6 +77,9 @@ load_loop:
 
     cmp ax, [stage2_size]
     jb load_loop
+
+    ; Save boot drive for stage2
+    mov dl, [drive_number]
 
     ; Switch to protected mode
     cli

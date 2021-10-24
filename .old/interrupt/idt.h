@@ -21,13 +21,13 @@ struct idt_gate_descriptor {
     uint8_t dpl:2;
     uint8_t present:1;
     uint16_t offset_high;
-}__attribute__((aligned(8),packed));
+}__attribute__((packed));
 typedef struct idt_gate_descriptor idt_gate_descriptor_t;
 
 struct idt_register {
     uint16_t limit;
     uint32_t base;
-}__attribute__((aligned(8),packed));
+}__attribute__((packed));
 typedef struct idt_register idt_register_t;
 
 void idt_init();

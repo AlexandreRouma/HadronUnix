@@ -15,29 +15,36 @@ SECTIONS
     .header BLOCK(16) : ALIGN(16)
 	{
 		*(.header)
+		*(.realmode_caller)
 	}
 
-	.text BLOCK(4K) : ALIGN(4K)
+	.text BLOCK(16) : ALIGN(16)
 	{
 		*(.text)
 	}
 
 	/* Read-only data. */
-	.rodata BLOCK(4K) : ALIGN(4K)
+	.rodata BLOCK(16) : ALIGN(16)
 	{
 		*(.rodata)
 	}
 
 	/* Read-write data (initialized) */
-	.data BLOCK(4K) : ALIGN(4K)
+	.data BLOCK(16) : ALIGN(16)
 	{
 		*(.data)
 	}
 
 	/* Read-write data (uninitialized) and stack */
-	.bss BLOCK(4K) : ALIGN(4K)
+	.bss BLOCK(16) : ALIGN(16)
 	{
 		*(COMMON)
 		*(.bss)
+	}
+
+	/* Space after the loader */
+	.space_after_loader BLOCK(16) : ALIGN(16)
+	{
+		*(.space_after_loader)
 	}
 }

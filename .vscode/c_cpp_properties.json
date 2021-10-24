@@ -5,7 +5,8 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/boot/stage2",
-                "${workspaceFolder}/boot/stage2/src"
+                "${workspaceFolder}/boot/stage2/src",
+                "${workspaceFolder}/host_tests/src"
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\VC\\Tools\\MSVC\\14.29.30133\\bin\\Hostx64\\x64\\cl.exe",

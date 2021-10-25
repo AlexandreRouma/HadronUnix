@@ -11,6 +11,7 @@ int streq(char *a, char *b) {
 void bootopts_fill(bootopts_t *bootopts, char *src) {
 	bootopts->kernel = "KERNEL";
 	bootopts->initrd = "INITRD";
+	bootopts->cmdline = "";
 
 	ini_t ini;
 	ini_init(&ini, src);

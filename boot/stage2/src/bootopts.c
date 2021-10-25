@@ -12,6 +12,7 @@ void bootopts_fill(bootopts_t *bootopts, char *src) {
 	// Set default options
 	bootopts->kernel = "KERNEL";
 	bootopts->initrd = "INITRD";
+	bootopts->cmdline = "";
 
 	// Initialize INI parser
 	ini_t ini;

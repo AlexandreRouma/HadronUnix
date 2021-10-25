@@ -156,7 +156,7 @@ int fat32_read(fat32_t *fat, fat32_entry_t *file, void *buf, uint32_t count, uin
 		int ret = fat->read_sectors(fat32_cluster_to_lba(fat, cluster), fat->sectors_per_cluster, ws, fat->ctx);
 		if (ret) { return ret; }
 
-		for (int i = head; i < FAT32_BYTES_PER_SECTOR * fat->sectors_per_cluster && count > 0; i++, count--, index++) {
+		for (uint32_t i = head; i < FAT32_BYTES_PER_SECTOR * fat->sectors_per_cluster && count > 0; i++, count--, index++) {
 			((uint8_t*)buf)[index] = ws[i];
 		}
 		head = 0;

@@ -3,6 +3,7 @@
 #include <fat32/fat32.h>
 #include <fat32/mbr.h>
 #include <elf/elf_loader.h>
+#include <bootopts.h>
 
 extern uint32_t my_shitty_realmode_function();
 
@@ -41,18 +42,39 @@ void stage2_main(uint32_t boot_drive_index) {
 
     // Load FAT32 FS
     fat32_t fat;
-    fat32_entry_t root;
     int err = fat32_init(&fat, drive_read_handler, mbr->part0.lba_start, &dinfo);
     if (err) {
         panic("Error loading FAT32 boot partition", err);
     }
+
+    // Get handle to FAT32 root
+    fat32_entry_t root;
     fat32_root_dir(&fat, &root);
+
+    fat32_entry_t bootini;
+    err = fat32_walk(&fat, &root, "BOOT.INI", &bootini);
+    if (err) {
+        panic("Missing boot.ini on bootfs", err);
+    }
+    char bootconf[bootini.size + 1];
+    fat32_read(&fat, &bootini, bootconf, bootini.size, 0);
+    bootconf[bootini.size] = '\0';
+    vga_print("\n");
+    vga_print(bootconf);
+    vga_print("\n");
+
+    bootopts_t bootopts;
+    bootopts_fill(&bootopts, bootconf);
+
+    vga_print("\nBooting ");
+    vga_print(bootopts.kernel);
+    vga_print("\n");
 
     // Open KERNEL on bootfs
     fat32_entry_t kernel;
-    err = fat32_walk(&fat, &root, "KERNEL", &kernel);
+    err = fat32_walk(&fat, &root, bootopts.kernel, &kernel);
     if (err) {
-        panic("Error opening KERNEL on bootfs", err);
+        panic("Error opening kernel on bootfs", err);
     }
 
     // Load ELF in memory

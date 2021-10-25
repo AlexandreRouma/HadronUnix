@@ -7,6 +7,7 @@ OUTPUT_IMG=$1
 STAGE1_BIN=$2
 STAGE2_BIN=$3
 KERNEL_ELF=$4
+BOOT_INI=$5
 
 # Config
 BOOTFS_IMG=/tmp/hadron_bootfs.img
@@ -19,6 +20,7 @@ SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 dd if=/dev/zero of=$BOOTFS_IMG bs=512 count=$BOOTFS_SIZE status=none
 mkfs.vfat -F32 $BOOTFS_IMG
 mcopy -i $BOOTFS_IMG $KERNEL_ELF ::/KERNEL
+mcopy -i $BOOTFS_IMG $BOOT_INI ::/BOOT.INI
 
 # Calculate sizes
 STAGE2_BIN_SIZE_BYTES=$(stat $STAGE2_BIN -c %s)

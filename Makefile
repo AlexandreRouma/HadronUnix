@@ -4,8 +4,8 @@ all: hadron.img
 
 .PHONY: clean boot kernel
 
-hadron.img: boot kernel
-	$(SHELL) tools/create_boot_image.sh $(BUILD)/hadron.img $(BUILD)/boot/stage1/stage1.bin $(BUILD)/boot/stage2/stage2.bin $(BUILD)/kernel/kernel
+hadron.img: boot kernel boot.ini
+	$(SHELL) tools/create_boot_image.sh $(BUILD)/hadron.img $(BUILD)/boot/stage1/stage1.bin $(BUILD)/boot/stage2/stage2.bin $(BUILD)/kernel/kernel boot.ini
 
 boot:
 	$(MAKE) -C boot

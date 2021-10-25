@@ -1,11 +1,12 @@
 #ifndef BOOTOPTS_H
 #define BOOTOPTS_H
 
-typedef struct bootopts {
+struct bootopts {
 	char *kernel;
 	char *initrd;
 	char *cmd;
-} bootopts_t;
+};
+typedef struct bootopts bootopts_t;
 
 void bootopts_fill(bootopts_t *bootopts, char *src);
 

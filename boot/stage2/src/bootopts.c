@@ -9,20 +9,25 @@ int streq(char *a, char *b) {
 }
 
 void bootopts_fill(bootopts_t *bootopts, char *src) {
+	// Set default options
 	bootopts->kernel = "KERNEL";
 	bootopts->initrd = "INITRD";
 
+	// Initialize INI parser
 	ini_t ini;
 	ini_init(&ini, src);
 	char *a, *b, *s;
 	while (ini_iter(&ini, &a, &b, &s)) {
 		if (a && b) {
-			if (streq(a, "kernel"))
+			if (streq(a, "kernel")) {
 				bootopts->kernel = b;
-			else if (streq(a, "initrd"))
+			}
+			else if (streq(a, "initrd")) {
 				bootopts->initrd = b;
-			else if (streq(a, "cmd"))
+			}
+			else if (streq(a, "cmd")) {
 				bootopts->cmd = b;
+			}
 		}
 	}
 }

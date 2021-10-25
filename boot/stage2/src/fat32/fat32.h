@@ -2,13 +2,13 @@
 #include <stdint.h>
 
 enum fat32_error {
-	FAT32_OK = 0,
-	FAT32_INVALSIG,
-	FAT32_INVALBPS,
-	FAT32_INVALFATS,
-	FAT32_NOENTRY,
-	FAT32_NOTDIR,
-	FAT32_EOF,
+    FAT32_OK = 0,
+    FAT32_INVALSIG,
+    FAT32_INVALBPS,
+    FAT32_INVALFATS,
+    FAT32_NOENTRY,
+    FAT32_NOTDIR,
+    FAT32_EOF,
 };
 typedef enum fat32_error fat32_error_t;
 
@@ -29,16 +29,16 @@ typedef enum fat32_error fat32_error_t;
 typedef int (*fat32_sector_reader_t)(uint32_t lba, uint32_t count, uint8_t *buf, void *ctx);
 
 struct fat32 {
-	uint32_t part_lba_begin;
-	uint32_t fat_lba_begin;
-	uint32_t clusters_lba_begin;
-	uint8_t sectors_per_cluster;
-	uint16_t reserved_sectors;
-	uint32_t sectors_per_fat;
-	uint32_t root_cluster;
+    uint32_t part_lba_begin;
+    uint32_t fat_lba_begin;
+    uint32_t clusters_lba_begin;
+    uint8_t sectors_per_cluster;
+    uint16_t reserved_sectors;
+    uint32_t sectors_per_fat;
+    uint32_t root_cluster;
 
-	fat32_sector_reader_t read_sectors;
-	void *ctx;
+    fat32_sector_reader_t read_sectors;
+    void *ctx;
 };
 typedef struct fat32 fat32_t;
 
@@ -63,18 +63,18 @@ uint32_t fat32_next_cluster(fat32_t *fat, uint32_t cluster);
 #define FAT32_ENTRY_SIZE_OFF 0x1C
 
 struct fat32_entry {
-	char filename[12];
-	uint8_t attribute;
-	uint32_t cluster;
-	uint32_t size;
+    char filename[12];
+    uint8_t attribute;
+    uint32_t cluster;
+    uint32_t size;
 };
 typedef struct fat32_entry fat32_entry_t;
 
 enum fat32_entry_type {
-	FAT32_NORMAL,
-	FAT32_LFN,
-	FAT32_UNUSED,
-	FAT32_EOD
+    FAT32_NORMAL,
+    FAT32_LFN,
+    FAT32_UNUSED,
+    FAT32_EOD
 };
 typedef enum fat32_entry_type fat32_entry_type_t;
 

@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 struct ini {
-	char *src;
+    char *src;
 };
 typedef struct ini ini_t;
 

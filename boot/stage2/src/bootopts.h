@@ -4,7 +4,7 @@
 struct bootopts {
 	char *kernel;
 	char *initrd;
-	char *cmd;
+	char *cmdline;
 };
 typedef struct bootopts bootopts_t;
 

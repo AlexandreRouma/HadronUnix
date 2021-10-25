@@ -1,27 +1,26 @@
 #include "ini.h"
 
 int eat_ws(ini_t *ini) {
-	while (*ini->src != '\0' && (*ini->src == ' ' || *ini->src == '\n' || *ini->src == '\t'))
+	while (*ini->src != '\0' && (*ini->src == ' ' || *ini->src == '\n' || *ini->src == '\t')) {
 		ini->src++;
+	}
 	return *ini->src == '\0';
 }
 
 int eat_until(ini_t *ini, char c) {
-	while (*ini->src != '\0' && *ini->src != c)
+	while (*ini->src != '\0' && *ini->src != c) {
 		ini->src++;
+	}
 
 	return *ini->src == '\0';
 }
 
 void ini_init(ini_t *ini, char *src) {
-	*ini = (ini_t) {
-		.src = src,
-	};
+	*ini = (ini_t) { .src = src, };
 }
 
 int ini_iter(ini_t *ini, char **a, char **b, char **s) {
-	if (*ini->src == '\0')
-		return 0;
+	if (*ini->src == '\0') { return 0; }
 
 	*a = NULL;
 	*b = NULL;

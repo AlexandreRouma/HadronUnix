@@ -1,6 +1,4 @@
-#ifndef FAT32_H
-#define FAT32_H
-
+#pragma once
 #include <stdint.h>
 
 enum fat32_error {
@@ -30,7 +28,7 @@ typedef enum fat32_error fat32_error_t;
 
 typedef int (*fat32_sector_reader_t)(uint32_t lba, uint32_t count, uint8_t *buf, void *ctx);
 
-typedef struct fat32{
+struct fat32 {
 	uint32_t part_lba_begin;
 	uint32_t fat_lba_begin;
 	uint32_t clusters_lba_begin;
@@ -41,7 +39,8 @@ typedef struct fat32{
 
 	fat32_sector_reader_t read_sectors;
 	void *ctx;
-} fat32_t;
+};
+typedef struct fat32 fat32_t;
 
 fat32_error_t fat32_init(fat32_t *fat, fat32_sector_reader_t read_sectors, uint32_t part_lba_begin, void *ctx);
 uint32_t fat32_cluster_to_lba(fat32_t *fat, uint32_t cluster);
@@ -63,24 +62,25 @@ uint32_t fat32_next_cluster(fat32_t *fat, uint32_t cluster);
 #define FAT32_ENTRY_FIRST_CLUSTER_LOW_OFF 0x1A
 #define FAT32_ENTRY_SIZE_OFF 0x1C
 
-typedef struct fat32_entry {
+struct fat32_entry {
 	char filename[12];
 	uint8_t attribute;
 	uint32_t cluster;
 	uint32_t size;
-} fat32_entry_t;
+};
+typedef struct fat32_entry fat32_entry_t;
 
-typedef enum fat32_entry_type {
+enum fat32_entry_type {
 	FAT32_NORMAL,
 	FAT32_LFN,
 	FAT32_UNUSED,
 	FAT32_EOD
-} fat32_entry_type_t;
+};
+typedef enum fat32_entry_type fat32_entry_type_t;
+
 fat32_entry_type_t fat32_parse_entry(uint8_t *addr, fat32_entry_t *ent);
 
 void fat32_root_dir(fat32_t *fat, fat32_entry_t *root);
 fat32_error_t fat32_walk(fat32_t *fat, fat32_entry_t *dir, char *name, fat32_entry_t *ent);
 int fat32_read(fat32_t *fat, fat32_entry_t *file, void *buf, uint32_t count, uint32_t offset);
 uint32_t fat32_skip_clusters(fat32_t *fat, uint32_t cluster, uint32_t count);
-
-#endif

@@ -27,7 +27,7 @@ int elf_loader_load(fat32_t* fat, fat32_entry_t* file, uint64_t* entry, uint64_t
             }
             else if (phdr[i].type == ELF64_PROG_HEADER_TYPE_LOAD) {
                 // Load into memory
-                fat32_read(fat, file, phdr[i].virt_addr, phdr[i].size_file, phdr[i].offset);
+                fat32_read(fat, file, (void*)(uint32_t)phdr[i].virt_addr, phdr[i].size_file, phdr[i].offset);
 
                 // Check min and max addresses
                 if (phdr[i].virt_addr < *lowest_addr) {

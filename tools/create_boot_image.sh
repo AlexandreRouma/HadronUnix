@@ -10,7 +10,7 @@ KERNEL_ELF=$4
 
 # Config
 BOOTFS_IMG=/tmp/hadron_bootfs.img
-BOOTFS_SIZE=1024
+BOOTFS_SIZE=131072
 
 # Get needed variables
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)

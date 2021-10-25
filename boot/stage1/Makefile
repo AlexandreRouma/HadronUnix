@@ -1,15 +1,18 @@
 NASM=nasm
+NASMFLAGS=-f bin -Isrc
+
 BUILD=../../build/boot/stage1
 
-.PHONY: build_dir clean
+SRC_ASM=$(shell find src -name '*.asm')
+
+OBJ_ASM=$(addprefix $(BUILD)/, $(addsuffix .o,$(SRC_ASM)))
 
 all: $(BUILD)/stage1.bin
 
-$(BUILD):
-	mkdir -p $(BUILD)
+.PHONY: clean
 
-$(BUILD)/stage1.bin: main.asm drive.asm gdt.asm memory.asm screen.asm strings.asm $(BUILD)
-	$(NASM) $< -f bin -o $(BUILD)/stage1.bin
+$(BUILD)/stage1.bin: src/main.asm $(SRC_ASM)
+	mkdir -p $(@D) && $(NASM) $(NASMFLAGS) $< -o $@
 
 clean:
-	rm -f $(BUILD)/*
+	rm -rf $(BUILD)

@@ -1,4 +1,4 @@
-#include <vga_basic/vga.h>
+#include "vga.h"
 
 uint8_t vga_text_color = 0x0F;
 uint16_t* vga_frame_buffer = (uint16_t*)0xB8000;

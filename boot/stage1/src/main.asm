@@ -1,7 +1,6 @@
 BITS 16
-SECTION .boot
+ORG 7C00h
 
-GLOBAL stage1_start
 stage1_start:
     ; Enforce CS:IP
     jmp 0:start

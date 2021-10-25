@@ -1,6 +1,5 @@
 BITS 64
 
-; TODO: figore out how to put it in the BSS and keep it in the elf
 SECTION .bss
 GLOBAL kstack_bottom
 GLOBAL kstack_top

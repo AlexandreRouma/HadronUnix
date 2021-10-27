@@ -4,6 +4,7 @@
 #include <fat32/mbr.h>
 #include <elf/elf_loader.h>
 #include <bootopts.h>
+#include <longmode/longmode.h>
 
 extern uint32_t my_shitty_realmode_function();
 
@@ -47,59 +48,61 @@ void stage2_main(uint32_t boot_drive_index) {
         panic("Error loading FAT32 boot partition", err);
     }
 
-    // Get handle to FAT32 root
-    fat32_entry_t root;
-    fat32_root_dir(&fat, &root);
+    // // Get handle to FAT32 root
+    // fat32_entry_t root;
+    // fat32_root_dir(&fat, &root);
 
-    fat32_entry_t bootini;
-    err = fat32_walk(&fat, &root, "BOOT.INI", &bootini);
-    if (err) {
-        panic("Missing boot.ini on bootfs", err);
-    }
-    char bootconf[bootini.size + 1];
-    fat32_read(&fat, &bootini, bootconf, bootini.size, 0);
-    bootconf[bootini.size] = '\0';
-    vga_print("\n");
-    vga_print(bootconf);
-    vga_print("\n");
+    // fat32_entry_t bootini;
+    // err = fat32_walk(&fat, &root, "BOOT.INI", &bootini);
+    // if (err) {
+    //     panic("Missing boot.ini on bootfs", err);
+    // }
+    // char bootconf[bootini.size + 1];
+    // fat32_read(&fat, &bootini, bootconf, bootini.size, 0);
+    // bootconf[bootini.size] = '\0';
+    // vga_print("\n");
+    // vga_print(bootconf);
+    // vga_print("\n");
 
-    bootopts_t bootopts;
-    bootopts_fill(&bootopts, bootconf);
+    // bootopts_t bootopts;
+    // bootopts_fill(&bootopts, bootconf);
 
-    vga_print("\nBooting ");
-    vga_print(bootopts.kernel);
-    vga_print("\n");
+    // vga_print("\nBooting ");
+    // vga_print(bootopts.kernel);
+    // vga_print("\n");
 
-    // Open KERNEL on bootfs
-    fat32_entry_t kernel;
-    err = fat32_walk(&fat, &root, bootopts.kernel, &kernel);
-    if (err) {
-        panic("Error opening kernel on bootfs", err);
-    }
+    // // Open KERNEL on bootfs
+    // fat32_entry_t kernel;
+    // err = fat32_walk(&fat, &root, bootopts.kernel, &kernel);
+    // if (err) {
+    //     panic("Error opening kernel on bootfs", err);
+    // }
 
-    // Load ELF in memory
-    uint64_t entry;
-    uint64_t min_addr;
-    uint64_t max_addr;
-    err = elf_loader_load(&fat, &kernel, &entry, &min_addr, &max_addr);
-    if (err) {
-        panic("Could not load kernel ELF", err);
-    }
+    // // Load ELF in memory
+    // uint64_t entry;
+    // uint64_t min_addr;
+    // uint64_t max_addr;
+    // err = elf_loader_load(&fat, &kernel, &entry, &min_addr, &max_addr);
+    // if (err) {
+    //     panic("Could not load kernel ELF", err);
+    // }
 
-    char buf[16];
+    // char buf[16];
 
-    vga_print("Entry: ");
-    itoa(entry, buf, 15);
-    vga_println(buf);
+    // vga_print("Entry: ");
+    // itoa(entry, buf, 15);
+    // vga_println(buf);
 
-    vga_print("Min Addr: ");
-    itoa(min_addr, buf, 15);
-    vga_println(buf);
+    // vga_print("Min Addr: ");
+    // itoa(min_addr, buf, 15);
+    // vga_println(buf);
 
-    vga_print("Max Addr: ");
-    itoa(max_addr, buf, 15);
-    vga_println(buf);
+    // vga_print("Max Addr: ");
+    // itoa(max_addr, buf, 15);
+    // vga_println(buf);
 
     vga_println("[BOOT] Ready");
+
+    longmode_call(0, 0, 0, 0, 0, 0);
 
 }

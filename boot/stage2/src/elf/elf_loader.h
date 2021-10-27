@@ -4,4 +4,4 @@
 
 #define ELF_LOADER_CONSEC_PHDRS   4
 
-int elf_loader_load(fat32_t* fat, fat32_entry_t* file, uint64_t* entry, uint64_t* lowest_addr, uint64_t* highest_addr);
+int elf_loader_load(fat32_t* fat, fat32_entry_t* file, uint32_t* entry, uint32_t* lowest_addr, uint32_t* highest_addr);

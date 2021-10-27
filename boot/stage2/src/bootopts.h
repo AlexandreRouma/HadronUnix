@@ -2,9 +2,10 @@
 #define BOOTOPTS_H
 
 struct bootopts {
-	char *kernel;
-	char *initrd;
-	char *cmdline;
+	char* kernel;
+	char* initrd;
+	char* cmdline;
+	char* gfx;
 };
 typedef struct bootopts bootopts_t;
 

@@ -18,3 +18,6 @@ kentry:
 
     ; Call kernel main
     call kmain
+
+kend:
+    jmp kend

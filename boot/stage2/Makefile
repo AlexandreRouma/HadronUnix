@@ -2,7 +2,7 @@ NASM=nasm
 NASMFLAGS=-f elf
 
 CC=i686-elf-gcc
-CFLAGS=-ffreestanding -fno-exceptions -Wall -Wextra -Isrc -g -Og
+CFLAGS=-ffreestanding -fno-exceptions -Wall -Wextra -Isrc -I../../common
 
 LD=i686-elf-ld
 LDFLAGS=-Tlinker.ld -nostdlib

@@ -2,7 +2,7 @@
 #include "elf64.h"
 #include <vga_basic/vga.h>
 
-int elf_loader_load(fat32_t* fat, fat32_entry_t* file, uint64_t* entry, uint64_t* lowest_addr, uint64_t* highest_addr) {
+int elf_loader_load(fat32_t* fat, fat32_entry_t* file, uint32_t* entry, uint32_t* lowest_addr, uint32_t* highest_addr) {
     // Load header
     Elf64_Ehdr_t hdr;
     fat32_read(fat, file, &hdr, sizeof(Elf64_Ehdr_t), 0);
@@ -27,7 +27,9 @@ int elf_loader_load(fat32_t* fat, fat32_entry_t* file, uint64_t* entry, uint64_t
             }
             else if (phdr[i].type == ELF64_PROG_HEADER_TYPE_LOAD) {
                 // Load into memory
-                fat32_read(fat, file, (void*)(uint32_t)phdr[i].virt_addr, phdr[i].size_file, phdr[i].offset);
+                if (phdr[i].size_file) {
+                    fat32_read(fat, file, (void*)(uint32_t)phdr[i].virt_addr, phdr[i].size_file, phdr[i].offset);
+                }
 
                 // Check min and max addresses
                 if (phdr[i].virt_addr < *lowest_addr) {

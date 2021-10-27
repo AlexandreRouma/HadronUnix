@@ -13,6 +13,7 @@ void bootopts_fill(bootopts_t *bootopts, char *src) {
 	bootopts->kernel = "KERNEL";
 	bootopts->initrd = "INITRD";
 	bootopts->cmdline = "";
+	bootopts->gfx = "text";
 
 	// Initialize INI parser
 	ini_t ini;
@@ -35,6 +36,9 @@ void bootopts_fill(bootopts_t *bootopts, char *src) {
 		}
 		else if (streq(key, "cmd")) {
 			bootopts->cmdline = value;
+		}
+		else if (streq(key, "gfx")) {
+			bootopts->gfx = value;
 		}
 	}
 }

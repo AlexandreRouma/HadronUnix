@@ -1,8 +1,8 @@
 ENTRY(kentry)
 
 SECTIONS {
-	/* Start kernel at 1M */
-	. = 1M;
+	/* Start kernel at 16MB */
+	. = 0x100000;
 
 	/* Multiboot header and code */
 	.text BLOCK(4K) : ALIGN(4K) {

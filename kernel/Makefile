@@ -2,7 +2,7 @@ NASM=nasm
 NASMFLAGS=-f elf64
 
 CC=x86_64-elf-gcc
-CFLAGS=-ffreestanding -fno-exceptions -Wall -Wextra -Isrc
+CFLAGS=-ffreestanding -fno-exceptions -Wall -Wextra -Isrc -I../common
 
 LD=x86_64-elf-ld
 LDFLAGS=-Tlinker.ld -nostdlib -z max-page-size=4096

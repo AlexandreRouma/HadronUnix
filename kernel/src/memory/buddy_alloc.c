@@ -36,11 +36,12 @@ uint64_t buddy_get_size(uint64_t block_count, uint16_t max_order) {
     return buddy_len + sizeof(buddy_t) + ((order+1) * sizeof(buddy_desc_t));
 }
 
-void buddy_create(buddy_t* buddy, uint64_t block_count, uint16_t max_order) {
+void buddy_create(buddy_t* buddy, void* data_start, uint64_t block_count, uint16_t max_order) {
     // Compute highest possible order
     uint16_t order = buddy_get_possible_order(block_count, max_order);
 
     // Write metadata
+    buddy->data_start = data_start; 
     buddy->block_count = block_count;
     buddy->order = order;
 

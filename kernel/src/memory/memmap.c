@@ -1,6 +1,5 @@
 #include "memmap.h"
 #include <string.h>
-#include <memory.h>
 #include <stdbool.h>
 
 #ifdef MEMMAP_DEBUG
@@ -296,7 +295,7 @@ void memmap_agregate() {
         // Count coninuous identical type entries
         for (count = 1; (i + count) < k_mem_map.entry_count &&
                         k_mem_map.map[i].type == k_mem_map.map[i + count].type &&
-                        k_mem_map.map[i].base + k_mem_map.map[i].size == k_mem_map.map[i + count].base; count++);
+                        k_mem_map.map[i + count - 1].base + k_mem_map.map[i + count - 1].size == k_mem_map.map[i + count].base; count++);
 
         // If there are more than 1 continuous entries, merge them
         if (count > 1) {

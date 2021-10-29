@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-#define MEMMAP_DEBUG
+//#define MEMMAP_DEBUG
 
 #define MEMMAP_MAX_ENTRIES      (4096 / sizeof(memmap_entry_t))
 

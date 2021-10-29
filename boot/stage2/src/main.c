@@ -107,8 +107,6 @@ void stage2_main(uint32_t boot_drive_index) {
     }
     uint32_t kernel_max = max_addr;
 
-    char buf[16];
-
     // Open the initrd
     fat32_entry_t initrd;
     err = fat32_walk(&fat, &root, bootopts.initrd, &initrd);
@@ -134,14 +132,15 @@ void stage2_main(uint32_t boot_drive_index) {
     if (!mmap_entry_count) {
         panic("Could not get memory map", 0);
     }
+    max_addr += mmap_entry_count * sizeof(mmap_entry_t);
 
     // for (int i = 0; i < mmap_entry_count; i++) {
     //     dump_mmap_entry(mmap[i]);
     // }
 
-    vga_print("MMAP entry count: ");
-    itoa(mmap_entry_count, buf, 15);
-    vga_println(buf);
+    // vga_print("MMAP entry count: ");
+    // itoa(mmap_entry_count, buf, 15);
+    // vga_println(buf);
 
     // Create boot info struct
     bootinfo_t* binfo = (bootinfo_t*)max_addr;
@@ -150,6 +149,7 @@ void stage2_main(uint32_t boot_drive_index) {
     binfo->initrd_addr = (uint32_t)initrd_buf;
     binfo->initrd_size = initrd.size;
     binfo->cmdline_addr = (uint32_t)cmdline_buf;
+    binfo->cmdline_size = cmdlen + 1;
     binfo->mmap_addr = (uint32_t)mmap;
     binfo->mmap_entry_count = mmap_entry_count;
     max_addr += sizeof(bootinfo_t);

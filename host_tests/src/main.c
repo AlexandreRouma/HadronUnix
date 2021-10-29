@@ -1,28 +1,14 @@
 #include <stdio.h>
 #include <memmap.h>
 
-#define B_COUNT 50
-#define B_ORDER 7
+#define B_COUNT 8000000
+#define B_ORDER 15
 
 int main() {
     memmap_init();
 
-
-    memmap_insert(0, (memmap_entry_t){
-        .base = 0,
-        .size = 0x10,
-        .type = MEMMAP_REGION_TYPE_FREE
-    });
-
-    memmap_insert(1, (memmap_entry_t){
-        .base = 0x10,
-        .size = 0x10,
-        .type = MEMMAP_REGION_TYPE_FREE
-    });
-
-    memmap_dump();
-
-    memmap_split(0, 4, 4);
+    memmap_define(0x00000, 0x00500, MEMMAP_REGION_TYPE_BIOS);
+    memmap_define(0x80000, 0x20000, MEMMAP_REGION_TYPE_BIOS);
 
     memmap_dump();
 

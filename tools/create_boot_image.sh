@@ -12,7 +12,7 @@ INITRD=$6
 
 # Config
 BOOTFS_IMG=/tmp/hadron_bootfs.img
-BOOTFS_SIZE=131072
+BOOTFS_SIZE=4096
 
 # Get needed variables
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)

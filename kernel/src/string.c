@@ -1,5 +1,7 @@
 #include "string.h"
 
+const char* STRING_H_HEX_ALPHABET = "0123456789ABCDEF";
+
 void* memcpy(void* dstptr, void* srcptr, uint64_t size) {
 	uint8_t* dst = (uint8_t*) dstptr;
 	uint8_t* src = (uint8_t*) srcptr;
@@ -11,6 +13,22 @@ void* memcpy(void* dstptr, void* srcptr, uint64_t size) {
 			dst[i-1] = src[i-1];
 	}
 	return dstptr;
+}
+
+void memmove(void* dstptr, void* srcptr, uint64_t size) {
+	if (dstptr == srcptr) { return; }
+	uint8_t* src = srcptr;
+	uint8_t* dst = dstptr;
+	if (dstptr > srcptr) {
+		for (uint64_t i = size; i > 0; i--) {
+			dst[i-1] = src[i-1];
+		}
+	}
+	else {
+		for (uint64_t i = 0; i < size; i++) {
+			dst[i] = src[i];
+		}
+	}
 }
 
 void* memset(void* bufptr, uint8_t value, uint64_t size) {
@@ -76,4 +94,13 @@ void itoa(int n, char* buf, int buflen) {
 	int ret_len = strlen(str);
 	memcpy(&buf[0], &buf[pos], ret_len);
 	buf[ret_len] = 0;
+}
+
+void itohex(uint64_t n, char* buf, int charcount) {
+	if (charcount > 16) { charcount = 16; }
+	int c = 0;
+	for (int i = (charcount - 1) * 4; i >= 0; i -= 4) {
+		buf[c++] = STRING_H_HEX_ALPHABET[(n >> i) & (uint64_t)0xF];
+	}
+	buf[charcount] = 0;
 }

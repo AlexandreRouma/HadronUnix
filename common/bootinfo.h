@@ -7,6 +7,7 @@ struct bootinfo {
     uint32_t initrd_addr;
     uint32_t initrd_size;
     uint32_t cmdline_addr;
+    uint32_t cmdline_size;
     uint32_t mmap_addr;
     uint32_t mmap_entry_count;
 };

@@ -1,6 +1,8 @@
 #include "mmap.h"
 #include <realmode/realmode.h>
 
+// addr = (seg * 16) + off
+
 int mmap_get(mmap_entry_t* entries) {
     // Set the initial state of the registers
     uint32_t buf_addr = (uint32_t)&asm_mmap_buf;

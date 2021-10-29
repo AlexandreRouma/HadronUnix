@@ -157,5 +157,5 @@ void stage2_main(uint32_t boot_drive_index) {
     vga_println("[BOOT] Ready");
 
     // Call 64bit kernel
-    //longmode_call(entry, (uint64_t)(uint32_t)binfo, 0, 0, 0, 0, 0);
+    longmode_call(entry, (uint64_t)(uint32_t)binfo, 0, 0, 0, 0, 0);
 }

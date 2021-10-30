@@ -2,6 +2,8 @@
 #include <stdint.h>
 
 struct bootinfo {
+    uint32_t bootloader_base;
+    uint32_t bootloader_size;
     uint32_t kernel_base;
     uint32_t kernel_size;
     uint32_t initrd_addr;

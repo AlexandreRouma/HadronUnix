@@ -16,6 +16,7 @@ enum memmap_region_type {
     MEMMAP_REGION_TYPE_BIOS,
     MEMMAP_REGION_TYPE_ACPI,
     MEMMAP_REGION_TYPE_SOFTWARE,
+    MEMMAP_REGION_TYPE_ALLOCATABLE,
     MEMMAP_REGION_TYPE_FREE
 };
 typedef enum memmap_region_type memmap_region_type_t;

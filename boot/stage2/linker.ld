@@ -47,4 +47,10 @@ SECTIONS
 	{
 		*(.space_after_loader)
 	}
+
+	/* Size detect */
+	.size_detect BLOCK(16) : ALIGN(16)
+	{
+		*(.size_detect)
+	}
 }

@@ -26,3 +26,7 @@ stage2_start:
 stage2_hlt:
     hlt
     jmp stage2_hlt
+
+SECTION .size_detect
+GLOBAL stage2_size_detect
+stage2_size_detect:

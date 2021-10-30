@@ -1,9 +1,11 @@
 #include <bootinfo.h>
 #include <vga_basic/vga.h>
 #include <memory/memmap.h>
-#include <memory/buddy_alloc.h>
+#include <memory/palloc.h>
 #include <bios_mmap.h>
 #include <string.h>
+#include <memory/paging.h>
+#include <memory/halloc.h>
 
 void dumphex(uint64_t n, int count) {
     char buf[32];
@@ -65,6 +67,7 @@ void kmain(bootinfo_t* binfo) {
     memmap_define(0x80000, 0x20000, MEMMAP_REGION_TYPE_BIOS);
 
     // Map elements loaded by the bootloader
+    memmap_define(binfo->bootloader_base, binfo->bootloader_size, MEMMAP_REGION_TYPE_SOFTWARE);
     memmap_define(binfo->kernel_base, binfo->kernel_size, MEMMAP_REGION_TYPE_SOFTWARE);
     memmap_define(binfo->initrd_addr, binfo->initrd_size, MEMMAP_REGION_TYPE_SOFTWARE);
     memmap_define(binfo->cmdline_addr, binfo->kernel_size, MEMMAP_REGION_TYPE_SOFTWARE);
@@ -110,4 +113,41 @@ void kmain(bootinfo_t* binfo) {
             vga_print("\n");
         }
     }
+
+    // Initialize the physical allocator on available memory
+    palloc_init(0, 0x3FFFFFFF, false);
+
+    // Initialize paging
+    paging_init();
+
+    
+
+    // Map all software and bios areas
+    for (int i = 0; i < k_mem_map.entry_count; i++) {
+        memmap_entry_t ent = k_mem_map.map[i];
+        if (ent.type != MEMMAP_REGION_TYPE_SOFTWARE && ent.type != MEMMAP_REGION_TYPE_BIOS) { continue; }
+        paging_map_multiple(k_pml4, ent.base, ent.base, PAGING_ENTRY_FLAG_RW, paging_area_size(ent.base, ent.size), false);
+    }
+    paging_map_multiple(k_pml4, 0xB8000, 0xB8000, PAGING_ENTRY_FLAG_RW, 80 * 25 * 2, false);
+    palloc_map_buddies();
+
+    // Enable paging
+    paging_enable();
+
+    vga_println("W E   B E   P A G I N '");
+
+    PALLOC_DEBUG = true;
+
+    void* bruh = malloc(420);
+    void* bruh2 = malloc(420);
+    dumphex(bruh, 16); vga_print("\n");
+    dumphex(bruh2, 16);
+
+    free(bruh);
+    free(bruh2);
+
+    bruh = malloc(420);
+    bruh2 = malloc(420);
+    dumphex(bruh, 16); vga_print("\n");
+    dumphex(bruh2, 16);
 }

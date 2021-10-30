@@ -7,6 +7,7 @@
 #include <longmode/longmode.h>
 #include <bootinfo.h>
 #include <mmap/mmap.h>
+#include <init.h>
 
 extern uint32_t my_shitty_realmode_function();
 
@@ -144,6 +145,8 @@ void stage2_main(uint32_t boot_drive_index) {
 
     // Create boot info struct
     bootinfo_t* binfo = (bootinfo_t*)max_addr;
+    binfo->bootloader_base = 0x7C00;
+    binfo->bootloader_size = (uint32_t)&stage2_size_detect - 0x7C00;
     binfo->kernel_base = min_addr;
     binfo->kernel_size = kernel_max - min_addr;
     binfo->initrd_addr = (uint32_t)initrd_buf;

@@ -8,6 +8,7 @@
 #include <bootinfo.h>
 #include <mmap/mmap.h>
 #include <init.h>
+#include <video/video.h>
 
 extern uint32_t my_shitty_realmode_function();
 
@@ -57,6 +58,11 @@ void stage2_main(uint32_t boot_drive_index) {
         panic("Could not get drive geometry", ret);
         return;
     }
+
+    vbe_ctrl_info_t ctrl_info;
+    vbe_get_ctrl_info(&ctrl_info);
+
+    // while(1);
 
     // Parse MBR
     mbr_t* mbr = (mbr_t*)(0x7C00 + 0x1B8);
@@ -126,6 +132,19 @@ void stage2_main(uint32_t boot_drive_index) {
     memset(cmdline_buf, 0, cmdlen+1);
     memcpy(cmdline_buf, bootopts.cmdline, cmdlen);
     max_addr += cmdlen + 1;
+
+    // Change video mode (except if text mode specified)
+    if (strcmp(bootopts.gfx, "text") != 0) {
+        vbe_mode_query_t query;
+        err = vbe_mode_query_parse(&query, bootopts.gfx);
+        if (err) {
+            panic("Invalid video query syntax", err);
+        }
+
+        vbe_mode_info_t modeinfo;
+        uint16_t mode = vbe_mode_search(&ctrl_info, &query, &modeinfo);
+        vbe_set_mode(mode);
+    }
 
     // Load memory map
     mmap_entry_t* mmap = (mmap_entry_t*)max_addr;

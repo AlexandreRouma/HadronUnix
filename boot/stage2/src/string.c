@@ -28,17 +28,10 @@ size_t strlen(char* str){
 	return len;
 }
 
-bool strcmp(char* str1, char* str2) {
-	size_t len = strlen(str1);
-	if (strlen(str2) != len) {
-		return false;
-	}
-	for (size_t i = 0; i < len; i++) {
-		if (str1[i] != str2[i]) {
-			return false;
-		}
-	}
-	return true;
+int strcmp(char* str1, char* str2) {
+    size_t i;
+	for (i = 0; str1[i] && str2[i] && str1[i] == str2[i]; i++);
+    return str1[i] - str2[i];
 }
 
 int strmatch(char* str1, char* str2) {

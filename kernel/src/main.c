@@ -22,7 +22,7 @@ void kmain(bootinfo_t* binfo) {
     // Print MOTD
     vga_set_color(0x6E);
     kprintf("  === Hadron Unix ===  \n");
-    kprintf("   The back fell off  \n");
+    kprintf("   The back fell off  ");
     vga_set_color(0x0F);
     kprintf("\n\ncmdline: \"%s\"\n", (char*)(uint64_t)binfo->cmdline_addr);
 
@@ -132,7 +132,7 @@ void kmain(bootinfo_t* binfo) {
             sprintf(type, "FREE");
         }
         else if (ent.type == MEMMAP_REGION_TYPE_ALLOCATABLE) {
-            vga_print(" TYPE=ALLOCATABLE\n");
+            sprintf(type, "ALLOCATABLE");
         }
         else {
             sprintf(type, "%08x", ent.type);

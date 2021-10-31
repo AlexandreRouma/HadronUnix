@@ -25,5 +25,5 @@ asm_mmap_get:
     mov eax, ebx
     retf
 asm_mmap_get_end:
-    xor eax, eax
+    mov eax, 0FFFFFFFFh
     retf

@@ -2,15 +2,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define PAGING_ENTRY_FLAG_PRESENT       (1 << 0)
-#define PAGING_ENTRY_FLAG_RW            (1 << 1)
-#define PAGING_ENTRY_FLAG_USER          (1 << 2)
-#define PAGING_ENTRY_FLAG_WRITETHROUGH  (1 << 3)
-#define PAGING_ENTRY_FLAG_NO_CACHE      (1 << 4)
-#define PAGING_ENTRY_FLAG_ACCESSED      (1 << 5)
-#define PAGING_ENTRY_FLAG_DIRTY         (1 << 6)
-#define PAGING_ENTRY_FLAG_GLOBAL        (1 << 8)
-#define PAGING_ENTRY_FLAG_NX            (1 << 63)
+#define PAGING_FLAG_PRESENT         (1 << 0)
+#define PAGING_FLAG_RW              (1 << 1)
+#define PAGING_FLAG_USER            (1 << 2)
+#define PAGING_FLAG_WRITETHROUGH    (1 << 3)
+#define PAGING_FLAG_NO_CACHE        (1 << 4)
+#define PAGING_FLAG_ACCESSED        (1 << 5)
+#define PAGING_FLAG_DIRTY           (1 << 6)
+#define PAGING_FLAG_GLOBAL          (1 << 8)
+#define PAGING_FLAG_NX              (1 << 63)
 
 #define PAGING_ENTRY_ADDR_MASK  0xFFFFFFFFF000
 

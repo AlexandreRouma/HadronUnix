@@ -13,7 +13,7 @@ void paging_init() {
 void paging_init_pml4(page_entry_t* pml4) {
     // Clear the table and map the last entry to the PML4
     memset(pml4, 0, PAGING_TABLE_SIZE);
-    pml4[PAGING_ENTRY_COUNT-1] = (uint64_t)pml4 | PAGING_ENTRY_FLAG_PRESENT | PAGING_ENTRY_FLAG_RW;
+    pml4[PAGING_ENTRY_COUNT-1] = (uint64_t)pml4 | PAGING_FLAG_PRESENT | PAGING_FLAG_RW;
 }
 
 page_entry_t* paging_fractal_access(uint64_t virt, paging_level_t level) {
@@ -51,12 +51,13 @@ uint64_t paging_decrement_subcount(page_entry_t* entry) {
 }
 
 uint64_t paging_get_subcount(page_entry_t* entry) {
-    return (*entry >> 52) & 0b111111111;
+    return (*entry >> 52) & (uint64_t)0b1111111111;
 }
 
 uint64_t paging_set_subcount(page_entry_t* entry, uint64_t subcount) {
-    *entry &= ~((uint64_t)0b111111111 << 52);
-    *entry |= (subcount & 0b111111111) << 52;
+    *entry &= ~((uint64_t)0b1111111111 << 52);
+    *entry |= (subcount & (uint64_t)0b1111111111) << 52;
+    uint64_t test = paging_get_subcount(entry);
 }
 
 uint64_t paging_area_size(uint64_t base, uint64_t size) {
@@ -82,19 +83,20 @@ void paging_map(page_entry_t* pml4, uint64_t virt, uint64_t phy, uint64_t flags,
     page_entry_t* pml4e = &pml4[PAGING_PML4_IDX(virt)];
 
     // If we have no PDP, allocate it
-    if (!(*pml4e & PAGING_ENTRY_FLAG_PRESENT)) {
+    if (!(*pml4e & PAGING_FLAG_PRESENT)) {
         // Allocate table
         pdp = palloc_alloc(1);
 
         // Add it to the parent table
-        *pml4e = (uint64_t)pdp | PAGING_ENTRY_FLAG_PRESENT | PAGING_ENTRY_FLAG_RW | PAGING_ENTRY_FLAG_USER;
+        *pml4e = (uint64_t)pdp | PAGING_FLAG_PRESENT | PAGING_FLAG_RW | PAGING_FLAG_USER;
         
         // If in fractal mode, invalidate TLB, otherwise, map it for further access
         if (frac) {
             paging_invalidate_tlb(virt);
+            pdp = paging_fractal_access(virt, PAGING_LEVEL_PDP);
         }
         else if (map_tables) {
-            paging_map(NULL, pdp, pdp, PAGING_ENTRY_FLAG_RW, false);
+            paging_map(NULL, pdp, pdp, PAGING_FLAG_RW, false);
         }
 
         // Clear the new table
@@ -108,19 +110,20 @@ void paging_map(page_entry_t* pml4, uint64_t virt, uint64_t phy, uint64_t flags,
     page_entry_t* pdpe = &pdp[PAGING_PDP_IDX(virt)];
 
     // If we have no PDP, allocate it
-    if (!(*pdpe & PAGING_ENTRY_FLAG_PRESENT)) {
+    if (!(*pdpe & PAGING_FLAG_PRESENT)) {
         // Allocate table
         pd = palloc_alloc(1);
 
         // Add it to the parent table
-        *pdpe = (uint64_t)pd | PAGING_ENTRY_FLAG_PRESENT | PAGING_ENTRY_FLAG_RW | PAGING_ENTRY_FLAG_USER;
+        *pdpe = (uint64_t)pd | PAGING_FLAG_PRESENT | PAGING_FLAG_RW | PAGING_FLAG_USER;
         
         // If in fractal mode, invalidate TLB, otherwise, map it for further access
         if (frac) {
             paging_invalidate_tlb(virt);
+            pd = paging_fractal_access(virt, PAGING_LEVEL_PD);
         }
         else if (map_tables) {
-            paging_map(NULL, pd, pd, PAGING_ENTRY_FLAG_RW, false);
+            paging_map(NULL, pd, pd, PAGING_FLAG_RW, false);
         }
 
         // Clear the new table
@@ -137,19 +140,20 @@ void paging_map(page_entry_t* pml4, uint64_t virt, uint64_t phy, uint64_t flags,
     page_entry_t* pde = &pd[PAGING_PD_IDX(virt)];
 
     // If we have no PDP, allocate it
-    if (!(*pde & PAGING_ENTRY_FLAG_PRESENT)) {
+    if (!(*pde & PAGING_FLAG_PRESENT)) {
         // Allocate table
         pt = palloc_alloc(1);
 
         // Add it to the parent table
-        *pde = (uint64_t)pt | PAGING_ENTRY_FLAG_PRESENT | PAGING_ENTRY_FLAG_RW | PAGING_ENTRY_FLAG_USER;
+        *pde = (uint64_t)pt | PAGING_FLAG_PRESENT | PAGING_FLAG_RW | PAGING_FLAG_USER;
         
         // If in fractal mode, invalidate TLB, otherwise, map it for further access
         if (frac) {
             paging_invalidate_tlb(virt);
+            pt = paging_fractal_access(virt, PAGING_LEVEL_PT);
         }
         else if (map_tables) {
-            paging_map(NULL, pt, pt, PAGING_ENTRY_FLAG_RW, false);
+            paging_map(NULL, pt, pt, PAGING_FLAG_RW, false);
         }
 
         // Clear the new table
@@ -166,12 +170,12 @@ void paging_map(page_entry_t* pml4, uint64_t virt, uint64_t phy, uint64_t flags,
     page_entry_t* pte = &pt[PAGING_PT_IDX(virt)];
 
     // Increment the number of entries if the page wasn't mapped
-    if (!(*pte & PAGING_ENTRY_FLAG_PRESENT)) {
+    if (!(*pte & PAGING_FLAG_PRESENT)) {
         paging_increment_subcount(pde);
     }
 
     // Map address and invalidate the TLB
-    *pte = flags | PAGING_ENTRY_FLAG_PRESENT | phy;
+    *pte = flags | PAGING_FLAG_PRESENT | phy;
     paging_invalidate_tlb(virt);
 
     return;
@@ -201,7 +205,7 @@ void paging_unmap(page_entry_t* pml4, uint64_t virt, bool unmap_tables) {
     page_entry_t* pml4e = &pml4[PAGING_PML4_IDX(virt)];
 
     // Abort if table not mapped
-    if (!(*pml4e & PAGING_ENTRY_FLAG_PRESENT)) {
+    if (!(*pml4e & PAGING_FLAG_PRESENT)) {
         return;
     }
 
@@ -212,7 +216,7 @@ void paging_unmap(page_entry_t* pml4, uint64_t virt, bool unmap_tables) {
     page_entry_t* pdpe = &pdp[PAGING_PDP_IDX(virt)];
 
     // Abort if table not mapped
-    if (!(*pdpe & PAGING_ENTRY_FLAG_PRESENT)) {
+    if (!(*pdpe & PAGING_FLAG_PRESENT)) {
         return;
     }
 
@@ -223,7 +227,7 @@ void paging_unmap(page_entry_t* pml4, uint64_t virt, bool unmap_tables) {
     page_entry_t* pde = &pd[PAGING_PD_IDX(virt)];
 
     // Abort if table not mapped
-    if (!(*pde & PAGING_ENTRY_FLAG_PRESENT)) {
+    if (!(*pde & PAGING_FLAG_PRESENT)) {
         return;
     }
 
@@ -234,7 +238,7 @@ void paging_unmap(page_entry_t* pml4, uint64_t virt, bool unmap_tables) {
     page_entry_t* pte = &pt[PAGING_PT_IDX(virt)];
 
     // Abort if table not mapped
-    if (!(*pte & PAGING_ENTRY_FLAG_PRESENT)) {
+    if (!(*pte & PAGING_FLAG_PRESENT)) {
         return;
     }
 
@@ -264,7 +268,7 @@ void paging_unmap(page_entry_t* pml4, uint64_t virt, bool unmap_tables) {
             *pdpe = 0;
 
             // Decremement entry count and remove table if empty
-            uint64_t pdpec = paging_decrement_subcount(pml4);
+            uint64_t pdpec = paging_decrement_subcount(pml4e);
             if (!pdpec) {
                 palloc_free(pdp, 1);
                 if (unmap_tables) {
@@ -295,44 +299,44 @@ int paging_get_mapping(page_entry_t* pml4, uint64_t virt, uint64_t* phy, uint64_
         // Get PML4 entry and PDP address
         pml4 = paging_fractal_access(virt, PAGING_LEVEL_PML4);
         page_entry_t pml4e = pml4[PAGING_PML4_IDX(virt)];
-        if (!(pml4e & PAGING_ENTRY_FLAG_PRESENT)) { return -1; }
+        if (!(pml4e & PAGING_FLAG_PRESENT)) { return -1; }
 
         // Get PDP entry and PD address
         page_entry_t* pdp = paging_fractal_access(virt, PAGING_LEVEL_PDP);
         page_entry_t pdpe = pdp[PAGING_PDP_IDX(virt)];
-        if (!(pdpe & PAGING_ENTRY_FLAG_PRESENT)) { return -1; }
+        if (!(pdpe & PAGING_FLAG_PRESENT)) { return -1; }
 
         // Get PD entry and PT address
         page_entry_t* pd = paging_fractal_access(virt, PAGING_LEVEL_PD);
         page_entry_t pde = pd[PAGING_PD_IDX(virt)];
-        if (!(pde & PAGING_ENTRY_FLAG_PRESENT)) { return -1; }
+        if (!(pde & PAGING_FLAG_PRESENT)) { return -1; }
 
         // Get PT entry and physical address
         page_entry_t* pt = paging_fractal_access(virt, PAGING_LEVEL_PT);
         page_entry_t pte = pt[PAGING_PT_IDX(virt)];
-        if (!(pte & PAGING_ENTRY_FLAG_PRESENT)) { return -1; }
+        if (!(pte & PAGING_FLAG_PRESENT)) { return -1; }
         
         // TODO: Return info
     }
     
     // Get PML4 entry and PDP address
     page_entry_t pml4e = pml4[PAGING_PML4_IDX(virt)];
-    if (!(pml4e & PAGING_ENTRY_FLAG_PRESENT)) { return -1; }
+    if (!(pml4e & PAGING_FLAG_PRESENT)) { return -1; }
     page_entry_t* pdp = pml4e & PAGING_ENTRY_ADDR_MASK;
 
     // Get PDP entry and PD address
     page_entry_t pdpe = pdp[PAGING_PDP_IDX(virt)];
-    if (!(pdpe & PAGING_ENTRY_FLAG_PRESENT)) { return -1; }
+    if (!(pdpe & PAGING_FLAG_PRESENT)) { return -1; }
     page_entry_t* pd = pdpe & PAGING_ENTRY_ADDR_MASK;
 
     // Get PD entry and PT address
     page_entry_t pde = pd[PAGING_PD_IDX(virt)];
-    if (!(pde & PAGING_ENTRY_FLAG_PRESENT)) { return -1; }
+    if (!(pde & PAGING_FLAG_PRESENT)) { return -1; }
     page_entry_t* pt = pde & PAGING_ENTRY_ADDR_MASK;
     
     // Get PT entry and physical address
     page_entry_t pte = pt[PAGING_PT_IDX(virt)];
-    if (!(pte & PAGING_ENTRY_FLAG_PRESENT)) { return -1; }
+    if (!(pte & PAGING_FLAG_PRESENT)) { return -1; }
     
     // TODO: Return info
 }

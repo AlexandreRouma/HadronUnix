@@ -1,8 +1,9 @@
 {
     "configurations": [
         {
-            "name": "Win32",
+            "name": "OS",
             "includePath": [
+                "${default}",
                 "/usr/local/lib/gcc/x86_64-elf/11.2.0/include",
                 "${workspaceFolder}/boot/stage2",
                 "${workspaceFolder}/boot/stage2/src",
@@ -12,6 +13,21 @@
             ],
             "windowsSdkVersion": "10.0.19041.0",
             "compilerPath": "/usr/local/bin/x86_64-elf-gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "compilerArgs": [
+                "-ffreestanding"
+            ]
+        },
+        {
+            "name": "Host",
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/host_tests/src"
+            ],
+            "windowsSdkVersion": "10.0.19041.0",
+            "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64",

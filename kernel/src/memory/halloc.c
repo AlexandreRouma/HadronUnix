@@ -19,7 +19,7 @@ block_header_t *halloc_last = NULL;
 
 void* halloc_get_blocks(uint64_t count) {
 	void* ptr = palloc_alloc(count);
-	paging_map(NULL, ptr, ptr, PAGING_ENTRY_FLAG_RW, false);
+	paging_map(NULL, ptr, ptr, PAGING_FLAG_RW, false);
 	return ptr;
 }
 

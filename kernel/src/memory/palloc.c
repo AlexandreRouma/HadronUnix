@@ -14,8 +14,9 @@ void palloc_init(uint64_t min_addr, uint64_t max_addr, bool allow_mapping) {
         // If not a free region of memory, ignore
         if (entry.type != MEMMAP_REGION_TYPE_FREE) { continue; }
 
-        // Check min address
+        // Check min and max address
         if (entry.base < min_addr) { continue; }
+        if (entry.base > max_addr) { continue; }
 
         // Calculate region pages
         uint64_t first_page = entry.base ? (((entry.base - 1) >> 12) + 1) << 12 : 0;
@@ -26,10 +27,12 @@ void palloc_init(uint64_t min_addr, uint64_t max_addr, bool allow_mapping) {
         uint64_t bud_page_count = ((buddy_get_size(page_count, PALLOC_MAX_BUDDY_ORDER) - 1) >> 12) + 1;
         if (bud_page_count >= page_count) { continue; }
 
+        // If the end of the buddy goes over the max address, abort
+        if (first_page + (bud_page_count * 4096) - 1 > max_addr) { continue; }
+
         // Initialize buddy
-        // TODO: Figure out how to map it after the first init (or when paging is enabled, it'll break)
         if (allow_mapping) {
-            paging_map_multiple(NULL, first_page, first_page, PAGING_ENTRY_FLAG_RW, bud_page_count, false);
+            paging_map_multiple(NULL, first_page, first_page, PAGING_FLAG_RW, bud_page_count, false);
         }
         buddy_t* bud = (buddy_t*)first_page;
         void* ctx = (void*)(first_page + (bud_page_count << 12));
@@ -51,7 +54,7 @@ void palloc_map_buddies() {
         uint64_t first_page = entry.base ? (((entry.base - 1) >> 12) + 1) << 12 : 0;
         uint64_t page_count = ((entry.base + entry.size) - first_page) >> 12;
         uint64_t bud_page_count = ((buddy_get_size(page_count, PALLOC_MAX_BUDDY_ORDER) - 1) >> 12) + 1;
-        paging_map_multiple(k_pml4, first_page, first_page, PAGING_ENTRY_FLAG_RW, bud_page_count, false);
+        paging_map_multiple(k_pml4, first_page, first_page, PAGING_FLAG_RW, bud_page_count, false);
     }
 }
 
@@ -70,13 +73,6 @@ void* palloc_alloc(uint64_t count) {
         // Mark area as allocated
         buddy_alloc(bud, idx, count);
 
-        if (PALLOC_DEBUG) {
-            vga_print("Allocated pages: ");
-            char test[32];
-            itoa(count, test, 31);
-            vga_println(test);
-        }
-
         // Return pointer
         return (void*)((idx << 12) + (uint64_t)bud->data_start);
     }
@@ -94,13 +90,6 @@ void palloc_free(void* page, uint64_t count) {
 
         // Check if the page comes from this area
         if (page_addr < entry.base || page_addr >= entry.base + entry.size) { continue; }
-
-        if (PALLOC_DEBUG) {
-            vga_print("Freed pages: ");
-            char test[32];
-            itoa(count, test, 31);
-            vga_println(test);
-        }
 
         // Free
         buddy_t* bud = (buddy_t*)(entry.base ? (((entry.base - 1) >> 12) + 1) << 12 : 0);

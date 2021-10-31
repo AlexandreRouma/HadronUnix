@@ -22,6 +22,18 @@
                     "ignoreFailures": true
                 }
             ]
+        },
+        {
+            "name": "(gdb) QEMU Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/build/kernel/kernel",
+            "miDebuggerServerAddress": "192.168.0.129:1234",
+            "cwd": "${workspaceRoot}",
+            "externalConsole": true,
+            "linux": {
+                "MIMode": "gdb"
+            }
         }
     ]
 }

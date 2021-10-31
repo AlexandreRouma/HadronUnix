@@ -6,6 +6,7 @@
 #include <string.h>
 #include <memory/paging.h>
 #include <memory/halloc.h>
+#include <gdt/gdt.h>
 
 void dumphex(uint64_t n, int count) {
     char buf[32];
@@ -26,29 +27,35 @@ void kmain(bootinfo_t* binfo) {
     vga_print((char*)(uint64_t)binfo->cmdline_addr);
     vga_print("\"");
 
+    // Initialize the GDT
+    gdt_init();
+    k_gdt_cs = gdt_define_entry(gdt_empty(false), GDT_FLAG_CODE | GDT_FLAG_64BIT, 0);
+    k_gdt_ds = gdt_define_entry(gdt_empty(false), GDT_FLAG_64BIT, 0);
+    gdt_load(k_gdt_ds);
+
     // Initialize the memory map
     memmap_init();
     
     // Since the map can be unordered and items overlapping, define sections in a specific order
     mmap_entry_t* mmap = (mmap_entry_t*)(uint64_t)binfo->mmap_addr;
     for (uint64_t i = 0; i < binfo->mmap_entry_count; i++) {
-        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_USABLE) { continue; }
+        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_USABLE || !mmap[i].size) { continue; }
         memmap_define(mmap[i].base, mmap[i].size, MEMMAP_REGION_TYPE_FREE);
     }
     for (uint64_t i = 0; i < binfo->mmap_entry_count; i++) {
-        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_RSVD) { continue; }
+        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_RSVD || !mmap[i].size) { continue; }
         memmap_define(mmap[i].base, mmap[i].size, MEMMAP_REGION_TYPE_RESERVED);
     }
     for (uint64_t i = 0; i < binfo->mmap_entry_count; i++) {
-        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_ACPI_REC) { continue; }
+        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_ACPI_REC || !mmap[i].size) { continue; }
         memmap_define(mmap[i].base, mmap[i].size, MEMMAP_REGION_TYPE_ACPI);
     }
     for (uint64_t i = 0; i < binfo->mmap_entry_count; i++) {
-        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_NVS) { continue; }
+        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_NVS || !mmap[i].size) { continue; }
         memmap_define(mmap[i].base, mmap[i].size, MEMMAP_REGION_TYPE_ACPI);
     }
     for (uint64_t i = 0; i < binfo->mmap_entry_count; i++) {
-        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_BAD_MEM) { continue; }
+        if (mmap[i].type != MMAP_BIOS_ENTRY_TYPE_BAD_MEM || !mmap[i].size) { continue; }
         memmap_define(mmap[i].base, mmap[i].size, MEMMAP_REGION_TYPE_DEAD);
     }
 
@@ -59,6 +66,7 @@ void kmain(bootinfo_t* binfo) {
         if (mmap[i].type == MMAP_BIOS_ENTRY_TYPE_ACPI_REC) { continue; }
         if (mmap[i].type == MMAP_BIOS_ENTRY_TYPE_NVS) { continue; }
         if (mmap[i].type == MMAP_BIOS_ENTRY_TYPE_BAD_MEM) { continue; }
+        if (!mmap[i].size) { continue; }
         memmap_define(mmap[i].base, mmap[i].size, MEMMAP_REGION_TYPE_DEAD);
     }
 
@@ -76,7 +84,28 @@ void kmain(bootinfo_t* binfo) {
     // Cleanup map
     memmap_agregate();
 
-    vga_print("\n\n");
+    // Initialize the physical allocator on available memory
+    palloc_init(0, 0x3FFFFFFF, false);
+
+    // Initialize paging
+    paging_init();
+
+    // Map all software and bios areas
+    for (int i = 0; i < k_mem_map.entry_count; i++) {
+        memmap_entry_t ent = k_mem_map.map[i];
+        if (ent.type != MEMMAP_REGION_TYPE_SOFTWARE && ent.type != MEMMAP_REGION_TYPE_BIOS) { continue; }
+        paging_map_multiple(k_pml4, ent.base, ent.base, PAGING_FLAG_RW, paging_area_size(ent.base, ent.size), false);
+    }
+    paging_map_multiple(k_pml4, 0xB8000, 0xB8000, PAGING_FLAG_RW, 80 * 25 * 2, false);
+    palloc_map_buddies();
+
+    // Enable paging
+    paging_enable();
+
+    // Initialize the physical allocator on the remaining memory
+    palloc_init(0, 0xFFFFFFFFFFFFFFFF, true);
+
+    vga_println("\n\nW E   B E   P A G I N '\n");
 
     for (uint64_t i = 0; i < k_mem_map.entry_count; i++) {
         memmap_entry_t ent = k_mem_map.map[i];
@@ -107,47 +136,13 @@ void kmain(bootinfo_t* binfo) {
         else if (ent.type == MEMMAP_REGION_TYPE_FREE) {
             vga_print(" TYPE=FREE\n");
         }
+        else if (ent.type == MEMMAP_REGION_TYPE_ALLOCATABLE) {
+            vga_print(" TYPE=ALLOCATABLE\n");
+        }
         else {
             vga_print(" TYPE=");
             dumphex(ent.type, 8);
             vga_print("\n");
         }
     }
-
-    // Initialize the physical allocator on available memory
-    palloc_init(0, 0x3FFFFFFF, false);
-
-    // Initialize paging
-    paging_init();
-
-    
-
-    // Map all software and bios areas
-    for (int i = 0; i < k_mem_map.entry_count; i++) {
-        memmap_entry_t ent = k_mem_map.map[i];
-        if (ent.type != MEMMAP_REGION_TYPE_SOFTWARE && ent.type != MEMMAP_REGION_TYPE_BIOS) { continue; }
-        paging_map_multiple(k_pml4, ent.base, ent.base, PAGING_ENTRY_FLAG_RW, paging_area_size(ent.base, ent.size), false);
-    }
-    paging_map_multiple(k_pml4, 0xB8000, 0xB8000, PAGING_ENTRY_FLAG_RW, 80 * 25 * 2, false);
-    palloc_map_buddies();
-
-    // Enable paging
-    paging_enable();
-
-    vga_println("W E   B E   P A G I N '");
-
-    PALLOC_DEBUG = true;
-
-    void* bruh = malloc(420);
-    void* bruh2 = malloc(420);
-    dumphex(bruh, 16); vga_print("\n");
-    dumphex(bruh2, 16);
-
-    free(bruh);
-    free(bruh2);
-
-    bruh = malloc(420);
-    bruh2 = malloc(420);
-    dumphex(bruh, 16); vga_print("\n");
-    dumphex(bruh2, 16);
 }

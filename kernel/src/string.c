@@ -47,9 +47,9 @@ size_t strlen(char* str){
 }
 
 int strcmp(char* str1, char* str2) {
-	size_t i = 0;
-	for (i = 0; str1[i] && str2[i] && str1[i] == str2[i]; i++);
-	return str1[i] - str2[i];
+	size_t i;
+    for (i = 0; str1[i] && str2[i] && str1[i] == str2[i]; i++);
+    return str1[i] - str2[i];
 }
 
 int strmatch(char* str1, char* str2) {
@@ -96,4 +96,22 @@ void itohex(uint64_t n, char* buf, int charcount) {
 		buf[c++] = STRING_H_HEX_ALPHABET[(n >> i) & (uint64_t)0xF];
 	}
 	buf[charcount] = 0;
+}
+
+char *strcpy(char *dest, char *src) {
+    size_t i;
+    for (i = 0; src[i]; i++)
+        dest[i] = src[i];
+    dest[i] = '\0';
+    return dest;
+}
+
+char *strncpy(char *dest, char *src, size_t n) {
+    size_t i;
+    for (i = 0; i < n && src[i]; i++)
+        dest[i] = src[i];
+    for (; i < n; i++)
+        dest[i] = '\0';
+
+    return dest;
 }

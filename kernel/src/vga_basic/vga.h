@@ -7,7 +7,7 @@
 void vga_init(uint8_t w, uint8_t h);
 void vga_set_color(char color);
 void vga_putcar(char c, uint8_t x, uint8_t y);
-void vga_print(char* str);
+int vga_print(char* str);
 void vga_println(char* str);
 void vga_set_cursor(uint8_t x, uint8_t y);
 void vga_clear();

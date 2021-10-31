@@ -11,3 +11,5 @@ int strcmp(char* str1, char* str2);
 int strmatch(char* str1, char* str2);
 void itoa(int n, char* buf, int buflen);
 void itohex(uint64_t n, char* buf, int charcount);
+char *strcpy(char *dest, char *src);
+char *strncpy(char *dest, char *src, size_t n);

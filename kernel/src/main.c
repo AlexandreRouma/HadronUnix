@@ -7,6 +7,7 @@
 #include <memory/paging.h>
 #include <memory/halloc.h>
 #include <gdt/gdt.h>
+#include <kfmt.h>
 
 void dumphex(uint64_t n, int count) {
     char buf[32];
@@ -16,16 +17,14 @@ void dumphex(uint64_t n, int count) {
 
 void kmain(bootinfo_t* binfo) {
     vga_init(80, 25);
+    kfmt_out = vga_print;
 
     // Print MOTD
     vga_set_color(0x6E);
-    vga_println("  === Hadron Unix ===  ");
-    vga_print("   The back fell off  ");
+    kprintf("  === Hadron Unix ===  \n");
+    kprintf("   The back fell off  \n");
     vga_set_color(0x0F);
-    vga_print("\n\n");
-    vga_print("cmdline: \"");
-    vga_print((char*)(uint64_t)binfo->cmdline_addr);
-    vga_print("\"");
+    kprintf("\n\ncmdline: \"%s\"\n", (char*)(uint64_t)binfo->cmdline_addr);
 
     // Initialize the GDT
     gdt_init();
@@ -105,44 +104,51 @@ void kmain(bootinfo_t* binfo) {
     // Initialize the physical allocator on the remaining memory
     palloc_init(0, 0xFFFFFFFFFFFFFFFF, true);
 
-    vga_println("\n\nW E   B E   P A G I N '\n");
+    kprintf("\n\nW E   B E   P A G I N '\n");
 
     for (uint64_t i = 0; i < k_mem_map.entry_count; i++) {
         memmap_entry_t ent = k_mem_map.map[i];
-        vga_print("[");
-        dumphex(i, 2);
-        vga_print("]: BASE=0x");
-        dumphex(ent.base, 16);
-        vga_print(" SIZE=0x");
-        dumphex(ent.size, 16);
+
+        char type[16];
         if (ent.type == MEMMAP_REGION_TYPE_DEAD) {
-            vga_print(" TYPE=DEAD\n");
+            sprintf(type, "DEAD");
         }
         else if (ent.type == MEMMAP_REGION_TYPE_RESERVED) {
-            vga_print(" TYPE=RESERVED\n");
+            sprintf(type, "RESERVED");
         }
         else if (ent.type == MEMMAP_REGION_TYPE_HARDWARE) {
-            vga_print(" TYPE=HARDWARE\n");
+            sprintf(type, "HARDWARE");
         }
         else if (ent.type == MEMMAP_REGION_TYPE_BIOS) {
-            vga_print(" TYPE=BIOS\n");
+            sprintf(type, "BIOS");
         }
         else if (ent.type == MEMMAP_REGION_TYPE_ACPI) {
-            vga_print(" TYPE=ACPI\n");
+            sprintf(type, "ACPI");
         }
         else if (ent.type == MEMMAP_REGION_TYPE_SOFTWARE) {
-            vga_print(" TYPE=SOFTWARE\n");
+            sprintf(type, "SOFTWARE");
         }
         else if (ent.type == MEMMAP_REGION_TYPE_FREE) {
-            vga_print(" TYPE=FREE\n");
+            sprintf(type, "FREE");
         }
         else if (ent.type == MEMMAP_REGION_TYPE_ALLOCATABLE) {
             vga_print(" TYPE=ALLOCATABLE\n");
         }
         else {
-            vga_print(" TYPE=");
-            dumphex(ent.type, 8);
-            vga_print("\n");
+            sprintf(type, "%08x", ent.type);
         }
+
+        kprintf("[%02x]: BASE=%#016x SIZE=%#016x TYPE=%s\n", i, ent.base, ent.size, type);
     }
+
+    void* bruh = malloc(420);
+    void* bruh2 = malloc(420);
+    kprintf("bruh(%p) bruh2(%p)\n", bruh, bruh2);
+
+    free(bruh);
+    free(bruh2);
+
+    bruh = malloc(420);
+    bruh2 = malloc(420);
+    kprintf("bruh(%p) bruh2(%p)\n", bruh, bruh2);
 }

@@ -22,8 +22,9 @@ void vga_putcar(char c, uint8_t x, uint8_t y) {
     vga_frame_buffer[x + (vga_terminal_width * y)] = c | (vga_text_color << 8);
 }
 
-void vga_print(char* str) {
-    for (uint32_t i = 0; i < strlen(str); i++) {
+int vga_print(char* str) {
+    size_t len = strlen(str);
+    for (uint32_t i = 0; i < len; i++) {
         if (str[i] == '\n'){
             vga_new_line();
         }
@@ -36,6 +37,7 @@ void vga_print(char* str) {
         }
     }
     vga_set_cursor(vga_cursor_x, vga_cursor_y);
+    return len;
 }
 
 void vga_println(char* str) {

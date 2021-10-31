@@ -7,6 +7,8 @@
 #include <memory/paging.h>
 #include <memory/halloc.h>
 #include <gdt/gdt.h>
+#include <interrupts/idt.h>
+#include <interrupts/pic.h>
 #include <kfmt.h>
 
 void dumphex(uint64_t n, int count) {
@@ -31,6 +33,13 @@ void kmain(bootinfo_t* binfo) {
     k_gdt_cs = gdt_define_entry(gdt_empty(false), GDT_FLAG_CODE | GDT_FLAG_64BIT, 0);
     k_gdt_ds = gdt_define_entry(gdt_empty(false), GDT_FLAG_64BIT, 0);
     gdt_load(k_gdt_ds);
+
+    // Initialize the IDT
+    idt_init();
+    idt_load();
+
+    // Initialize the PIC
+    pic_init(0x20, 0x28);
 
     // Initialize the memory map
     memmap_init();

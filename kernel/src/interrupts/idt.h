@@ -9,7 +9,7 @@ struct idt_entry {
     uint32_t offset_high;
     uint32_t _rsvd;
 }__attribute__((packed));
-typedef struct idt_entry_t;
+typedef struct idt_entry idt_entry_t;
 
 struct idtr {
     uint16_t limit;
@@ -27,5 +27,5 @@ typedef struct idtr idtr_t;
 
 void idt_init();
 void idt_load();
-void idt_set_entry(int id, uint8_t type, uint8_t dpl);
+void idt_set_entry(int id, void* handler, uint32_t segment, uint8_t type, uint8_t dpl);
 void idt_clear_entry(int id);

@@ -1,5 +1,5 @@
 #include <bootinfo.h>
-#include <vga_basic/vga.h>
+#include <vga/vga.h>
 #include <memory/memmap.h>
 #include <memory/palloc.h>
 #include <bios_mmap.h>

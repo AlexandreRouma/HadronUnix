@@ -1,5 +1,5 @@
 #include <bootinfo.h>
-#include <vga_basic/vga.h>
+#include <vga/vga.h>
 #include <memory/memmap.h>
 #include <memory/palloc.h>
 #include <bios_mmap.h>
@@ -113,7 +113,7 @@ void kmain(bootinfo_t* binfo) {
     // Initialize the physical allocator on the remaining memory
     palloc_init(0, 0xFFFFFFFFFFFFFFFF, true);
 
-    kprintf("\n\nW E   B E   P A G I N '\n");
+    kprintf("\nW E   B E   P A G I N '\n");
 
     for (uint64_t i = 0; i < k_mem_map.entry_count; i++) {
         memmap_entry_t ent = k_mem_map.map[i];
@@ -160,4 +160,10 @@ void kmain(bootinfo_t* binfo) {
     bruh = malloc(420);
     bruh2 = malloc(420);
     kprintf("bruh(%p) bruh2(%p)\n", bruh, bruh2);
+
+    for(int i = 0; i < 200000; i++) {
+        kprintf("%04x\r", i);
+        i++;
+    }
+    kprintf("\f");
 }

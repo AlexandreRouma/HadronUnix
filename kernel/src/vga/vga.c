@@ -25,8 +25,18 @@ void vga_putcar(char c, uint8_t x, uint8_t y) {
 int vga_print(char* str) {
     size_t len = strlen(str);
     for (uint32_t i = 0; i < len; i++) {
-        if (str[i] == '\n'){
+        if (str[i] == '\n') {
             vga_new_line();
+        }
+        else if (str[i] == '\r') {
+            vga_cursor_x = 0;
+        }
+        else if (str[i] == '\f') {
+            vga_clear();
+        }
+        else if (str[i] == '\b' && vga_cursor_x > 0) {
+            vga_cursor_x--;
+            vga_print(" ");
         }
         else if (vga_cursor_x == vga_terminal_width) {
             vga_new_line();
@@ -38,23 +48,6 @@ int vga_print(char* str) {
     }
     vga_set_cursor(vga_cursor_x, vga_cursor_y);
     return len;
-}
-
-void vga_println(char* str) {
-    for (uint32_t i = 0; i < strlen(str); i++) {
-        if (str[i] == '\n'){
-            vga_new_line();
-        }
-        else if (vga_cursor_x == vga_terminal_width) {
-            vga_new_line();
-        }
-        else {
-            vga_frame_buffer[vga_cursor_x + (vga_terminal_width * vga_cursor_y)] = str[i] | (vga_text_color << 8);
-            vga_cursor_x++;
-        }
-    }
-    vga_new_line();
-    vga_set_cursor(vga_cursor_x, vga_cursor_y);
 }
 
 void vga_set_cursor(uint8_t x, uint8_t y)  {
@@ -123,48 +116,6 @@ void vga_show_cursor(uint8_t thickness) {
 void vga_cursor() {
     outb(0x3D4, 0x0A);
 	outb(0x3D5, 0x20);
-}
-
-void vga_ok(bool vga_new_line) {
-   vga_print("[   ");
-    char old_color = vga_text_color;
-    vga_text_color = (vga_text_color & 0xF0) | 0x0A;
-   vga_print("OK");
-    vga_text_color = old_color;
-    if (vga_new_line) {
-       vga_println("   ]");
-    }
-    else {
-       vga_print("   ]");
-    }
-}
-
-void vga_warn(bool vga_new_line) {
-   vga_print("[  ");
-    char old_color = vga_text_color;
-    vga_text_color = (vga_text_color & 0xF0) | 0x06;
-   vga_print("WARN");
-    vga_text_color = old_color;
-    if (vga_new_line) {
-       vga_println("  ]");
-    }
-    else {
-       vga_print("  ]");
-    }
-}
-
-void vga_failed(bool vga_new_line) {
-    vga_print("[ ");
-    char old_color = vga_text_color;
-    vga_text_color = (vga_text_color & 0xF0) | 0x04;
-    vga_print("FAILED");
-    vga_text_color = old_color;
-    if (vga_new_line) {
-        vga_println(" ]");
-    }
-    else {
-        vga_print(" ]");
-    }
 }
 
 uint8_t vga_get_width() {

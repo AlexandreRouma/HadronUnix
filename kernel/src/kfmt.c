@@ -3,7 +3,6 @@
 #include <stddef.h>
 
 #include <string.h>
-#include <vga_basic/vga.h>
 
 int safegard(char *str) {
     (void)str;

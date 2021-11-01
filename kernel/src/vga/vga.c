@@ -38,6 +38,9 @@ int vga_print(char* str) {
             vga_cursor_x--;
             vga_print(" ");
         }
+        else if (str[i] == '\t') {
+            vga_print("        ");
+        }
         else if (vga_cursor_x == vga_terminal_width) {
             vga_new_line();
         }

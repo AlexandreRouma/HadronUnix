@@ -115,3 +115,16 @@ char *strncpy(char *dest, char *src, size_t n) {
 
     return dest;
 }
+
+void itoa_p(int n, char *buf, int buflen, int padding) {
+    itoa(n, buf, buflen);
+    if (padding == 0)
+        return;
+    int len = strlen(buf);
+    if (len + padding >= buflen)
+        padding = buflen - len;
+    if (len < padding) {
+        memmove(buf + padding - len, buf, len);
+        memset(buf, '0', padding - len);
+    }
+}

@@ -160,10 +160,4 @@ void kmain(bootinfo_t* binfo) {
     bruh = malloc(420);
     bruh2 = malloc(420);
     kprintf("bruh(%p) bruh2(%p)\n", bruh, bruh2);
-
-    for(int i = 0; i < 200000; i++) {
-        kprintf("%04x\r", i);
-        i++;
-    }
-    kprintf("\f");
 }

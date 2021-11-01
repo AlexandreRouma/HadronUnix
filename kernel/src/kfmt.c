@@ -100,10 +100,10 @@ int format(int (*emitter)(char *str, void *ctx, size_t offset), void *ctx, char 
                 // TODO: do properly with a good itoa function
                 switch (longcount) {
                 case 0:
-                    itoa(va_arg(ap, int32_t), num, 63);
+                    itoa_p(va_arg(ap, int32_t), num, 63, padcount);
                     break;
                 default:
-                    itoa(va_arg(ap, int64_t), num, 63);
+                    itoa_p(va_arg(ap, int64_t), num, 63, padcount);
                 }
                 count += emitter(num, ctx, count);
                 break;

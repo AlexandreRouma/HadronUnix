@@ -10,11 +10,32 @@
 #include <interrupts/idt.h>
 #include <interrupts/pic.h>
 #include <kfmt.h>
+#include <vfs/vfs.h>
+#include <vfs/tarfs.h>
 
-void dumphex(uint64_t n, int count) {
-    char buf[32];
-    itohex(n, buf, count);
-    vga_print(buf);
+void dump_link(vfs_link_t* ln) {
+    kprintf("%s %08d %s", (ln->vnode->stat.flags & VFS_FLAG_DIRECTORY) ? "DIR " : "FILE", ln->vnode->stat.size, ln->name);
+}
+
+void ls(vfs_vnode_t* vnode) {
+    vfs_link_t* ln = vfs_readdir(vnode);
+    while (ln) {
+        kprintf("%s %08d %s\n", (ln->vnode->stat.flags & VFS_FLAG_DIRECTORY) ? "DIR " : "FILE", ln->vnode->stat.size, ln->name);
+        ln = ln->next;
+    }
+}
+
+void dir(vfs_vnode_t* vnode, int depth) {
+    vfs_link_t* ln = vfs_readdir(vnode);
+    while (ln) {
+        for (int i = 0; i < depth-1; i++) { kprintf("    "); }
+        if (depth >= 1) { kprintf(ln->next ? " |--" : " \x07--"); }
+        dump_link(ln); kprintf("\n");
+        if (ln->vnode->stat.flags & VFS_FLAG_DIRECTORY) {
+            dir(ln->vnode, depth + 1);
+        }
+        ln = ln->next;
+    }
 }
 
 void kmain(bootinfo_t* binfo) {
@@ -26,7 +47,7 @@ void kmain(bootinfo_t* binfo) {
     kprintf("  === Hadron Unix ===  \n");
     kprintf("   The back fell off  ");
     vga_set_color(0x0F);
-    kprintf("\n\ncmdline: \"%s\"\n", (char*)(uint64_t)binfo->cmdline_addr);
+    kprintf("\n\ncmdline: \"%s\"\n\n", (char*)(uint64_t)binfo->cmdline_addr);
 
     // Initialize the GDT
     gdt_init();
@@ -113,51 +134,14 @@ void kmain(bootinfo_t* binfo) {
     // Initialize the physical allocator on the remaining memory
     palloc_init(0, 0xFFFFFFFFFFFFFFFF, true);
 
-    kprintf("\n\nW E   B E   P A G I N '\n");
+    // Initialize VFS
+    vfs_init();
 
-    for (uint64_t i = 0; i < k_mem_map.entry_count; i++) {
-        memmap_entry_t ent = k_mem_map.map[i];
+    // Initialize tarfs for the initrd
+    tarfs_t* tarfs = tarfs_create((uint8_t*)binfo->initrd_addr, binfo->initrd_size);
 
-        char type[16];
-        if (ent.type == MEMMAP_REGION_TYPE_DEAD) {
-            sprintf(type, "DEAD");
-        }
-        else if (ent.type == MEMMAP_REGION_TYPE_RESERVED) {
-            sprintf(type, "RESERVED");
-        }
-        else if (ent.type == MEMMAP_REGION_TYPE_HARDWARE) {
-            sprintf(type, "HARDWARE");
-        }
-        else if (ent.type == MEMMAP_REGION_TYPE_BIOS) {
-            sprintf(type, "BIOS");
-        }
-        else if (ent.type == MEMMAP_REGION_TYPE_ACPI) {
-            sprintf(type, "ACPI");
-        }
-        else if (ent.type == MEMMAP_REGION_TYPE_SOFTWARE) {
-            sprintf(type, "SOFTWARE");
-        }
-        else if (ent.type == MEMMAP_REGION_TYPE_FREE) {
-            sprintf(type, "FREE");
-        }
-        else if (ent.type == MEMMAP_REGION_TYPE_ALLOCATABLE) {
-            sprintf(type, "ALLOCATABLE");
-        }
-        else {
-            sprintf(type, "%08x", ent.type);
-        }
+    // Mount the initrd on /
+    vfs_mount(vfs_root, tarfs->root);
 
-        kprintf("[%02x]: BASE=%#016x SIZE=%#016x TYPE=%s\n", i, ent.base, ent.size, type);
-    }
-
-    void* bruh = malloc(420);
-    void* bruh2 = malloc(420);
-    kprintf("bruh(%p) bruh2(%p)\n", bruh, bruh2);
-
-    free(bruh);
-    free(bruh2);
-
-    bruh = malloc(420);
-    bruh2 = malloc(420);
-    kprintf("bruh(%p) bruh2(%p)\n", bruh, bruh2);
+    dir(vfs_root, 0);
 }

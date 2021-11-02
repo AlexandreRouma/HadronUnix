@@ -11,7 +11,6 @@ void idt_init() {
 }
 
 void idt_load() {
-    asm("xchg %bx, %bx");
     asm ("lidt %0" : : "m"(k_idtr));
 }
 

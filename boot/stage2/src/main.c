@@ -9,6 +9,7 @@
 #include <mmap/mmap.h>
 #include <init.h>
 #include <video/video.h>
+#include <video/gfx_query.h>
 
 extern uint32_t my_shitty_realmode_function();
 
@@ -47,6 +48,9 @@ void dump_mmap_entry(mmap_entry_t entry) {
 }
 
 void stage2_main(uint32_t boot_drive_index) {
+    // Enforce text mode
+    vbe_set_mode(VBE_TEXT_MODE);
+    
     // Initialize VGA driver
     vga_init(80, 25);
     vga_println("[BOOT] Starting");
@@ -58,11 +62,6 @@ void stage2_main(uint32_t boot_drive_index) {
         panic("Could not get drive geometry", ret);
         return;
     }
-
-    vbe_ctrl_info_t ctrl_info;
-    vbe_get_ctrl_info(&ctrl_info);
-
-    // while(1);
 
     // Parse MBR
     mbr_t* mbr = (mbr_t*)(0x7C00 + 0x1B8);
@@ -133,19 +132,6 @@ void stage2_main(uint32_t boot_drive_index) {
     memcpy(cmdline_buf, bootopts.cmdline, cmdlen);
     max_addr += cmdlen + 1;
 
-    // Change video mode (except if text mode specified)
-    if (strcmp(bootopts.gfx, "text") != 0) {
-        vbe_mode_query_t query;
-        err = vbe_mode_query_parse(&query, bootopts.gfx);
-        if (err) {
-            panic("Invalid video query syntax", err);
-        }
-
-        vbe_mode_info_t modeinfo;
-        uint16_t mode = vbe_mode_search(&ctrl_info, &query, &modeinfo);
-        vbe_set_mode(mode);
-    }
-
     // Load memory map
     mmap_entry_t* mmap = (mmap_entry_t*)max_addr;
     int mmap_entry_count = mmap_get(mmap);
@@ -154,13 +140,34 @@ void stage2_main(uint32_t boot_drive_index) {
     }
     max_addr += mmap_entry_count * sizeof(mmap_entry_t);
 
-    // for (int i = 0; i < mmap_entry_count; i++) {
-    //     dump_mmap_entry(mmap[i]);
-    // }
+    // Get VBE controller info
+    vbe_ctrl_info_t ctrl_info;
+    vbe_get_ctrl_info(&ctrl_info);
 
-    // vga_print("MMAP entry count: ");
-    // itoa(mmap_entry_count, buf, 15);
-    // vga_println(buf);
+    // Change video mode (except if text mode specified)
+    bool textmode = true;
+    vbe_mode_info_t modeinfo;
+    if (!strcmp(bootopts.gfx, "text")) {
+        vbe_get_mode_info(&modeinfo, VBE_TEXT_MODE);
+    }
+    else {
+        // Parse the mode query
+        gfx_query_t query;
+        err = gfx_query_parse(&query, bootopts.gfx);
+        if (err) {
+            panic("Invalid video query syntax", err);
+        }
+
+        // Find a mode according to the query
+        uint16_t mode = vbe_mode_search(&ctrl_info, &query, &modeinfo);
+        if (mode == VBE_MODE_END) {
+            panic("Could not find video mode matching the query", err);
+        }
+
+        // Set the new video mode
+        vbe_set_mode(mode);
+        textmode = false;
+    }
 
     // Create boot info struct
     bootinfo_t* binfo = (bootinfo_t*)max_addr;
@@ -174,6 +181,34 @@ void stage2_main(uint32_t boot_drive_index) {
     binfo->cmdline_size = cmdlen + 1;
     binfo->mmap_addr = (uint32_t)mmap;
     binfo->mmap_entry_count = mmap_entry_count;
+    
+    // Write video mode info
+    if (!textmode) {
+        binfo->fbinfo = (fbinfo_t) {
+            .type = FB_TYPE_GRAPHIC,
+            .addr = modeinfo.framebuffer,
+            .width = modeinfo.width,
+            .height = modeinfo.height,
+            .pitch = modeinfo.pitch,
+            .depth = modeinfo.bpp,
+            .red_mask = modeinfo.red_mask,
+            .red_pos = modeinfo.red_position,
+            .green_mask = modeinfo.green_mask,
+            .green_pos = modeinfo.green_position,
+            .blue_mask = modeinfo.blue_mask,
+            .blue_pos = modeinfo.blue_position,
+        };
+    }
+    else {
+        binfo->fbinfo = (fbinfo_t) {
+            .type = FB_TYPE_TEXT,
+            .addr = modeinfo.framebuffer,
+            .width = modeinfo.w_char,
+            .height = modeinfo.y_char,
+            .pitch = modeinfo.pitch
+        };
+    }
+
     max_addr += sizeof(bootinfo_t);
 
     vga_println("[BOOT] Ready");

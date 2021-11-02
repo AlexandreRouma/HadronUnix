@@ -5,7 +5,6 @@ EXTERN k_gdtr
 
 GLOBAL asm_gdt_load
 asm_gdt_load:
-    xchg bx, bx
     ; Load GDT
     lgdt [k_gdtr]
 

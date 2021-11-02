@@ -156,18 +156,21 @@ void kmain(bootinfo_t* binfo) {
     // Initialize VFS
     vfs_init();
 
-    // Initialize tarfs for the initrd
+    // Initialize and mount the initrd
     tarfs_t* tarfs = tarfs_create((uint8_t*)binfo->initrd_addr, binfo->initrd_size);
-    tmpfs_t* tmpfs = tmpfs_create();
-    devfs_t* devfs = devfs_create();
-    
-    // Mount the initrd on /
     vfs_mount(vfs_root, tarfs->root);
-    vfs_vnode_t* tmp = vfs_walk(vfs_root, "tmp");
+
+    // Intialize and mount the devfs
+    devfs_t* devfs = devfs_create();
     vfs_vnode_t* dev = vfs_walk(vfs_root, "dev");
-    vfs_mount(tmp, tmpfs->root);
     vfs_mount(dev, devfs->root);
 
+    // Intialize and mount the tmpfs
+    tmpfs_t* tmpfs = tmpfs_create();
+    vfs_vnode_t* tmp = vfs_walk(vfs_root, "tmp");
+    vfs_mount(tmp, tmpfs->root);
+    
+    // Create a demo chardev
     devfs_chardev_t cdev;
     cdev.read = dev_read;
     cdev.write = dev_write;
@@ -175,6 +178,7 @@ void kmain(bootinfo_t* binfo) {
     cdev.ctx = NULL;
     devfs_bind_dev(devfs, DEVFS_TYPE_CHARDEV, &cdev, "tty0");
 
+    // Create a demo directory and file in the tempfs
     vfs_vnode_t* hai = vfs_create(tmp, "hai", VFS_FLAG_DIRECTORY);
     vfs_create(hai, "hello", 0);
 
@@ -188,11 +192,9 @@ void kmain(bootinfo_t* binfo) {
 
     dir(vfs_root, 0);
 
-    vfs_unmount(tmp);
-    vfs_unmount(vfs_root);
-    vfs_unmount(dev);
-
-    devfs_destroy(devfs);
-    tmpfs_destroy(tmpfs);
-    tarfs_destroy(tarfs);
+    // paging_map(NULL, binfo->fbinfo.addr, binfo->fbinfo.addr, PAGING_FLAG_RW, false);
+    // uint8_t* fb = (uint8_t*)binfo->fbinfo.addr;
+    // for (int i = 0; i < 4096; i++) {
+    //     fb[i] = 0xFF;
+    // }
 }

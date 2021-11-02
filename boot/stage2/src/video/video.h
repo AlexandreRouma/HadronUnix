@@ -1,29 +1,33 @@
 #pragma once
-
 #include <stddef.h>
 #include <stdint.h>
+#include "gfx_query.h"
 
-#define VBE_INT_GET_CTRL 0x4F00
-#define VBE_INT_GET_MODE 0x4F01
-#define VBE_INT_SET_MODE 0x4F02
+#define VBE_TEXT_MODE           0x03
 
-#define VBE_MODE_END 0xFFFF
-#define VBE_SUPPORTED 0x004F
+#define VBE_INT_GET_CTRL_INFO   0x4F00
+#define VBE_INT_GET_MODE_INFO   0x4F01
+#define VBE_INT_SET_MODE        0x4F02
+
+#define VBE_MODE_END            0xFFFF
+#define VBE_SUPPORTED           0x004F
 
 struct vbe_ctrl_info {
     char signature[4];
     uint16_t version;
-    uint32_t oem;
-    uint32_t capabilities;
+    uint16_t oem_ptr_offset;
+    uint16_t oem_ptr_segment;
+    uint8_t capabilities[4];
     uint16_t video_modes_offset;
     uint16_t video_modes_segment;
+    uint16_t total_mem;
     uint16_t software_rev;
     uint32_t vendor;
     uint32_t product_name;
     uint32_t product_rev;
     char reserved[222];
     char oem_data[256];
-} __attribute__((packed));
+}__attribute__((packed));
 typedef struct vbe_ctrl_info vbe_ctrl_info_t;
 
 struct vbe_mode_info {
@@ -40,54 +44,36 @@ struct vbe_mode_info {
     uint16_t height;
     uint8_t w_char;
     uint8_t y_char;
-    uint8_t memplanes;
+    uint8_t planes;
     uint8_t bpp;
     uint8_t banks;
-    uint8_t memmodel;
-    uint8_t banksize;
-    uint8_t imgperpage;
-    uint8_t reserved;
-    uint8_t redmasksize;
-    uint8_t redfieldpos;
-    uint8_t greenmasksize;
-    uint8_t greenfieldpos;
-    uint8_t bluemasksize;
-    uint8_t bluefieldpos;
-    uint8_t reservedmasksize;
-    uint8_t reservedfieldpos;
-    uint8_t directcolorinfo;
-    uint32_t phys;
-    uint32_t offscreenoff;
-    uint16_t offscreensize;
-    uint8_t reserved2[206];
-};
+    uint8_t memory_model;
+    uint8_t bank_size;
+    uint8_t image_pages;
+    uint8_t reserved0;
+ 
+    uint8_t red_mask;
+    uint8_t red_position;
+    uint8_t green_mask;
+    uint8_t green_position;
+    uint8_t blue_mask;
+    uint8_t blue_position;
+    uint8_t reserved_mask;
+    uint8_t reserved_position;
+    uint8_t direct_color_attributes;
+ 
+    uint32_t framebuffer;
+    uint32_t off_screen_mem_off;
+    uint16_t off_screen_mem_size;
+    uint8_t _rsvd0[206];
+}__attribute__((packed));
 typedef struct vbe_mode_info vbe_mode_info_t;
 
-void vbe_get_ctrl_info(vbe_ctrl_info_t *ctrl_info);
-uint16_t vbe_get_mode(vbe_ctrl_info_t *ctrl_info, vbe_mode_info_t *mode_info, uint16_t modenum);
+void vbe_get_ctrl_info(vbe_ctrl_info_t* ctrl_info);
+void vbe_get_mode_info(vbe_mode_info_t* mode_info, uint16_t mode);
+void vbe_dump_modes(vbe_ctrl_info_t* ctrl_info);
+uint16_t vbe_mode_search(vbe_ctrl_info_t* ctrl_info, gfx_query_t *query, vbe_mode_info_t* modeinfo);
 char vbe_set_mode(uint16_t mode);
 
 extern uint32_t asm_vbe_call();
 
-#define VBE_QUERY_MODE 0
-#define VBE_QUERY_TRIPLET 1
-
-struct vbe_mode_query {
-    char type;
-    union {
-        uint16_t mode;
-        struct {
-            char wineq;
-            char hineq;
-            char dineq;
-            uint16_t width;
-            uint16_t height;
-            uint16_t depth;
-        } triplet;
-    };
-};
-typedef struct vbe_mode_query vbe_mode_query_t;
-
-char vbe_mode_query_parse(vbe_mode_query_t *query, char *src);
-
-uint16_t vbe_mode_search(vbe_ctrl_info_t *ctrl_info, vbe_mode_query_t *query, vbe_mode_info_t *modeinfo);

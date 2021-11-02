@@ -192,6 +192,8 @@ void kmain(bootinfo_t* binfo) {
 
     dir(vfs_root, 0);
 
+    kprintf("%d %d %d %x\n", binfo->fbinfo.width, binfo->fbinfo.height, binfo->fbinfo.pitch, binfo->fbinfo.addr);
+
     // paging_map(NULL, binfo->fbinfo.addr, binfo->fbinfo.addr, PAGING_FLAG_RW, false);
     // uint8_t* fb = (uint8_t*)binfo->fbinfo.addr;
     // for (int i = 0; i < 4096; i++) {

@@ -30,23 +30,6 @@ int drive_read_handler(uint32_t lba, uint32_t count, uint8_t *buf, void *ctx) {
     return drive_read_sectors(dinfo, lba, count, buf);
 }
 
-void dump_mmap_entry(mmap_entry_t entry) {
-    vga_println("--------------- ENTRY ---------------");
-    char buf[16];
-
-    itoa(entry.base, buf, 15);
-    vga_print("base: ");
-    vga_println(buf);
-
-    itoa(entry.size, buf, 15);
-    vga_print("size: ");
-    vga_println(buf);
-
-    itoa(entry.type, buf, 15);
-    vga_print("type: ");
-    vga_println(buf);
-}
-
 void stage2_main(uint32_t boot_drive_index) {
     // Enforce text mode
     vbe_set_mode(VBE_TEXT_MODE);
@@ -147,10 +130,7 @@ void stage2_main(uint32_t boot_drive_index) {
     // Change video mode (except if text mode specified)
     bool textmode = true;
     vbe_mode_info_t modeinfo;
-    if (!strcmp(bootopts.gfx, "text")) {
-        vbe_get_mode_info(&modeinfo, VBE_TEXT_MODE);
-    }
-    else {
+    if (strcmp(bootopts.gfx, "text")) {
         // Parse the mode query
         gfx_query_t query;
         err = gfx_query_parse(&query, bootopts.gfx);
@@ -201,11 +181,7 @@ void stage2_main(uint32_t boot_drive_index) {
     }
     else {
         binfo->fbinfo = (fbinfo_t) {
-            .type = FB_TYPE_TEXT,
-            .addr = modeinfo.framebuffer,
-            .width = modeinfo.w_char,
-            .height = modeinfo.y_char,
-            .pitch = modeinfo.pitch
+            .type = FB_TYPE_TEXT
         };
     }
 

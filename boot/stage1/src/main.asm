@@ -13,13 +13,15 @@ stage1_start:
 stage2_size: dw 0
 
 start:
+    ; Set segment registers before accessing variables
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+
     ; Save boot data
     mov [drive_number], dl
 
     ; Set segment registers
-    xor ax, ax
-    mov ds, ax
-    mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax

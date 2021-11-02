@@ -1,4 +1,4 @@
-#include <vga_basic/vga.h>
+#include <vga/vga.h>
 #include <drive/drive.h>
 #include <fat32/fat32.h>
 #include <fat32/mbr.h>

@@ -1,6 +1,6 @@
 #include "elf_loader.h"
 #include "elf64.h"
-#include <vga_basic/vga.h>
+#include <vga/vga.h>
 
 int elf_loader_load(fat32_t* fat, fat32_entry_t* file, uint32_t* entry, uint32_t* lowest_addr, uint32_t* highest_addr) {
     // Load header

@@ -1,6 +1,6 @@
 #include "mmap.h"
 #include <realmode/realmode.h>
-#include <vga_basic/vga.h>
+#include <vga/vga.h>
 
 // addr = (seg * 16) + off
 

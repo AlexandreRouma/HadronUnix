@@ -2,7 +2,7 @@
 #include "memmap.h"
 #include "palloc.h"
 #include <string.h>
-#include <vga_basic/vga.h>
+#include <vga/vga.h>
 
 page_entry_t k_pml4[PAGING_ENTRY_COUNT]__attribute__((aligned(4096)));
 

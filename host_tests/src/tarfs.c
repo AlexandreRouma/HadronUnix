@@ -6,26 +6,30 @@ tarfs_t* tarfs_create(uint8_t* data, uint64_t len) {
     tarfs_t* tarfs = malloc(sizeof(tarfs_t));
 
     // Fill driver function pointers
-    tarfs->driver.walk = tarfs_walk;
-    tarfs->driver.readdir = tarfs_readdir;
-    tarfs->driver.unlink = tarfs_unlink;
-    tarfs->driver.open = tarfs_open;
-    tarfs->driver.read = tarfs_read;
-    tarfs->driver.write = tarfs_write;
-    tarfs->driver.seek = tarfs_seek;
-    tarfs->driver.tell = tarfs_tell;
-    tarfs->driver.close = tarfs_close;
+    tarfs->driver = (vfs_driver_t) {
+        .walk = tarfs_walk,
+        .readdir = tarfs_readdir,
+        .unlink = tarfs_unlink,
+        .open = tarfs_open,
+        .read = tarfs_read,
+        .write = tarfs_write,
+        .seek = tarfs_seek,
+        .tell = tarfs_tell,
+        .close = tarfs_close
+    };
 
     // Create root vnode
     tarfs->root = malloc(sizeof(vfs_vnode_t));
     tarfs->root->driver = &tarfs->driver;
-    tarfs->root->stat.flags = VFS_FLAG_DIRECTORY;
-    tarfs->root->stat.permissions = 0777;
-    tarfs->root->stat.uid = 0;
-    tarfs->root->stat.gid = 0;
-    tarfs->root->stat.create_time = 0;
-    tarfs->root->stat.modified_time = 0;
-    tarfs->root->stat.size = 0;
+    tarfs->root->stat = (vfs_stat_t) {
+        .flags = VFS_FLAG_DIRECTORY,
+        .permissions = 0777,
+        .uid = 0,
+        .gid = 0,
+        .create_time = 0,
+        .modified_time = 0,
+        .size = 0
+    };
     tarfs->root->refcount = 1;
     tarfs->root->child = NULL;
     tarfs->root->mount = NULL;

@@ -1,6 +1,6 @@
 #include "drive.h"
 #include <realmode/realmode.h>
-#include <vga_basic/vga.h>
+#include <vga/vga.h>
 
 int drive_get_info(drive_info_t* info, uint8_t id) {
     // Call BIOS with the drive ID

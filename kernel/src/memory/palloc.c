@@ -3,7 +3,7 @@
 #include "memmap.h"
 #include "paging.h"
 #include <stddef.h>
-#include <vga_basic/vga.h>
+#include <vga/vga.h>
 
 bool PALLOC_DEBUG = false;
 

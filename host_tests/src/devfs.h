@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stdbool.h>
 #include "vfs.h"
 
 struct devfs {
@@ -9,6 +10,7 @@ struct devfs {
 typedef struct devfs devfs_t;
 
 struct devfs_blockdev {
+    uint64_t size;
     int (*read)(uint8_t* buf, uint64_t offset, uint64_t len, void* ctx);
     int (*write)(uint8_t* buf, uint64_t offset, uint64_t len, void* ctx);
     int (*ioctl)(int call, void* in, void* out, void* ctx);
@@ -32,22 +34,18 @@ typedef enum devfs_dev_type devfs_dev_type_t;
 
 struct devfs_dev {
     devfs_dev_type_t type;
-    union {
-        devfs_blockdev_t* blockdev;
-        devfs_chardev_t* chardev;
-    };
+    void* dev;
 };
 typedef struct devfs_dev devfs_dev_t;
 
 devfs_t* devfs_create();
 void devfs_destroy(devfs_t* devfs);
 
-int devfs_gen_name(char* prefix, char* new_name);
+int devfs_gen_name(devfs_t* devfs, char* prefix, char* new_name);
 
-int devfs_bind_blockdev(devfs_t* devfs, devfs_blockdev_t* blockdev, char* name);
-int devfs_unbind_blockdev(devfs_t* devfs, char* name);
-int devfs_bind_chardev(devfs_t* devfs, devfs_chardev_t* chardev, char* name);
-int devfs_unbind_chardev(devfs_t* devfs, char* name);
+int devfs_bind_dev(devfs_t* devfs, devfs_dev_type_t type, void* new_dev, char* name);
+int devfs_unbind_dev(devfs_t* devfs, char* name);
+bool devfs_has_prefix(char* str, char* prefix);
 
 // Driver implementation
 struct vfs_vnode* devfs_walk(struct vfs_vnode* parent, char* name);
@@ -59,3 +57,6 @@ int devfs_write(struct vfs_file* file, uint8_t* buf, int len);
 int devfs_seek(struct vfs_file* file, int pos);
 int devfs_tell(struct vfs_file* file);
 int devfs_close(struct vfs_file* file);
+
+void devfs_driver_cleanup(vfs_driver_t *driver);
+void devfs_ctx_cleanup(vfs_vnode_t *vnode);

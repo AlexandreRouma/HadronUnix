@@ -12,6 +12,7 @@
 #include <kfmt.h>
 #include <vfs/vfs.h>
 #include <vfs/tarfs.h>
+#include <panic.h>
 
 void dump_link(vfs_link_t* ln) {
     kprintf("%s %08d %s", (ln->vnode->stat.flags & VFS_FLAG_DIRECTORY) ? "DIR " : "FILE", ln->vnode->stat.size, ln->name);

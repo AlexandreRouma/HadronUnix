@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 vfs_vnode_t* vfs_root = NULL;
 
@@ -69,13 +70,14 @@ int vfs_unlink(vfs_vnode_t* parent, char* name) {
 int vfs_mount(vfs_vnode_t* mountpoint, vfs_vnode_t* root) {
     if (mountpoint == root) { return -1; }
     if (mountpoint->mount) { return vfs_mount(mountpoint->mount, root); }
-    mountpoint->mount = root;
+    mountpoint->mount = vfs_ref(root);
     return 0;
 }
 
 int vfs_unmount(vfs_vnode_t* mountpoint) {
     if (!mountpoint->mount) { return -1; }
     if (!mountpoint->mount->mount) {
+        vfs_unref(mountpoint->mount);
         mountpoint->mount = NULL;
         return 0;
     }
@@ -87,12 +89,17 @@ vfs_file_t* vfs_open(vfs_vnode_t* vnode) {
     return vnode->driver->open(vnode);
 }
 
+vfs_file_t* vfs_create(vfs_vnode_t* parent, char* name, uint16_t flags) {
+    if (parent->mount) { return vfs_create(parent->mount, name, flags); }
+    return parent->driver->create(parent, name, flags);
+}
+
 int vfs_read(vfs_file_t* file, uint8_t* buf, int len) {
     return file->vnode->driver->read(file, buf, len);
 }
 
 int vfs_write(vfs_file_t* file, uint8_t* buf, int len) {
-    return file->vnode->driver->read(file, buf, len);
+    return file->vnode->driver->write(file, buf, len);
 }
 
 int vfs_seek(vfs_file_t* file, int pos) {
@@ -152,4 +159,47 @@ vfs_link_t* vfs_get_child_by_name(vfs_vnode_t* parent, char* name, vfs_link_t** 
         ln = ln->next;
     }
     return NULL;
+}
+
+vfs_vnode_t* vfs_ref(vfs_vnode_t *vnode) {
+    if (vnode->refcount <= 0 && vnode->driver) {
+        vfs_driver_ref(vnode->driver);
+    }
+
+    vnode->refcount++;
+    return vnode;
+}
+
+void vfs_unref(vfs_vnode_t *vnode) {
+    vnode->refcount--;
+    if (vnode->refcount > 0) { return; }
+        
+
+    vfs_driver_t *driver = vnode->driver;
+    vnode->driver->ctx_cleanup(vnode);
+
+    vfs_link_t *link = vnode->child;
+    while (link) {
+        vfs_link_t *tmp = link->next;
+        vfs_unref(link->vnode);
+        free(link->name);
+        free(link);
+        link = tmp;
+    }
+
+    free(vnode);
+
+    if (driver) {
+        vfs_driver_unref(driver);
+    }
+}
+
+vfs_driver_t* vfs_driver_ref(vfs_driver_t *driver) {
+    driver->refcount++;
+    return driver;
+}
+void vfs_driver_unref(vfs_driver_t *driver) {
+    driver->refcount--;
+    if (driver->refcount > 0) { return; }
+    driver->driver_cleanup(driver);
 }

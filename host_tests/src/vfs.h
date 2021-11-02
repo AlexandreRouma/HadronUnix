@@ -8,12 +8,17 @@ struct vfs_driver {
     struct vfs_link* (*readdir)(struct vfs_vnode* dir);
     int (*unlink)(struct vfs_vnode* parent, char* name);
     struct vfs_file* (*open)(struct vfs_vnode* vnode);
+    struct vfs_vnode* (*create)(struct vfs_vnode* parent, char *name, uint16_t flags);
     int (*read)(struct vfs_file* file, uint8_t* buf, int len);
     int (*write)(struct vfs_file* file, uint8_t* buf, int len);
     int (*seek)(struct vfs_file* file, int pos);
     int (*tell)(struct vfs_file* file);
+    int (*ioctl)(int call, void* in, void* out);
     int (*close)(struct vfs_file* file);
+    void (*driver_cleanup)(struct vfs_driver* driver);
+    void (*ctx_cleanup)(struct vfs_vnode* vnode);
     void* ctx;
+    int refcount;
 };
 typedef struct vfs_driver vfs_driver_t;
 
@@ -61,8 +66,17 @@ int vfs_unlink(vfs_vnode_t* parent, char* name);
 int vfs_mount(vfs_vnode_t* mountpoint, vfs_vnode_t* root);
 int vfs_unmount(vfs_vnode_t* mountpoint);
 
+// VFS VNODE MANAGEMENT
+vfs_vnode_t* vfs_ref(vfs_vnode_t *vnode);
+void vfs_unref(vfs_vnode_t *vnode);
+
+/* Do NOT (!) call these 2 directly :)) */
+vfs_driver_t* vfs_driver_ref(vfs_driver_t *driver);
+void vfs_driver_unref(vfs_driver_t *drive);
+
 // VFS IO
 vfs_file_t* vfs_open(vfs_vnode_t* vnode);
+vfs_file_t* vfs_create(vfs_vnode_t* parent, char* name, uint16_t flags);
 int vfs_read(vfs_file_t* file, uint8_t* buf, int len);
 int vfs_write(vfs_file_t* file, uint8_t* buf, int len);
 int vfs_seek(vfs_file_t* file, int pos);

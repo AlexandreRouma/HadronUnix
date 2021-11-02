@@ -73,7 +73,7 @@ int format(int (*emitter)(char *str, void *ctx, size_t offset), void *ctx, char 
                 break;
             case 'c':
                 char c[2];
-                c[0] = *it;
+                c[0] = va_arg(ap, int);
                 c[1] = '\0';
                 count += emitter(c, ctx, count);
                 break;

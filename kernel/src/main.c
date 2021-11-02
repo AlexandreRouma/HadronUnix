@@ -48,10 +48,7 @@ int dev_read(uint8_t* buf, uint64_t len, void* ctx) {
 
 int dev_write(uint8_t* buf, uint64_t len, void* ctx) {
     for (int i = 0; i < len; i++) {
-        char c[2];
-        c[0] = buf[i];
-        c[1] = '\0';
-        kprintf("%s", c);
+        kprintf("%c", buf[i]);
     }
     return len;
 }

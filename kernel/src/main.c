@@ -13,6 +13,9 @@
 #include <vfs/vfs.h>
 #include <vfs/tarfs.h>
 #include <panic.h>
+#include <vfs/tmpfs.h>
+#include <vfs/kstdio.h>
+#include <vfs/devfs.h>
 
 void dump_link(vfs_link_t* ln) {
     kprintf("%s %08d %s", (ln->vnode->stat.flags & VFS_FLAG_DIRECTORY) ? "DIR " : "FILE", ln->vnode->stat.size, ln->name);
@@ -37,6 +40,24 @@ void dir(vfs_vnode_t* vnode, int depth) {
         }
         ln = ln->next;
     }
+}
+
+int dev_read(uint8_t* buf, uint64_t len, void* ctx) {
+    return 0;
+}
+
+int dev_write(uint8_t* buf, uint64_t len, void* ctx) {
+    for (int i = 0; i < len; i++) {
+        char c[2];
+        c[0] = buf[i];
+        c[1] = '\0';
+        kprintf("%s", c);
+    }
+    return len;
+}
+
+int dev_ioctl(int call, void* in, void* out, void* ctx) {
+    return -1;
 }
 
 void kmain(bootinfo_t* binfo) {
@@ -140,9 +161,41 @@ void kmain(bootinfo_t* binfo) {
 
     // Initialize tarfs for the initrd
     tarfs_t* tarfs = tarfs_create((uint8_t*)binfo->initrd_addr, binfo->initrd_size);
-
+    tmpfs_t* tmpfs = tmpfs_create();
+    devfs_t* devfs = devfs_create();
+    
     // Mount the initrd on /
     vfs_mount(vfs_root, tarfs->root);
+    vfs_vnode_t* tmp = vfs_walk(vfs_root, "tmp");
+    vfs_vnode_t* dev = vfs_walk(vfs_root, "dev");
+    vfs_mount(tmp, tmpfs->root);
+    vfs_mount(dev, devfs->root);
+
+    devfs_chardev_t cdev;
+    cdev.read = dev_read;
+    cdev.write = dev_write;
+    cdev.ioctl = dev_ioctl;
+    cdev.ctx = NULL;
+    devfs_bind_dev(devfs, DEVFS_TYPE_CHARDEV, &cdev, "tty0");
+
+    vfs_vnode_t* hai = vfs_create(tmp, "hai", VFS_FLAG_DIRECTORY);
+    vfs_create(hai, "hello", 0);
+
+    vfs_file_t* f = kfopen("/tmp/hai/hello");
+    kfwrite("hello!", 6, 1, f);
+    kfclose(f);
+
+    f = kfopen("/dev/tty0");
+    kfwrite("This was written through kstdio and devfs!\n", 43, 1, f);
+    kfclose(f);
 
     dir(vfs_root, 0);
+
+    vfs_unmount(tmp);
+    vfs_unmount(vfs_root);
+    vfs_unmount(dev);
+
+    devfs_destroy(devfs);
+    tmpfs_destroy(tmpfs);
+    tarfs_destroy(tarfs);
 }

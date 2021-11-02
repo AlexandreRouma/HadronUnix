@@ -1,8 +1,5 @@
 #include "tmpfs.h"
-
 #include <stddef.h>
-#include <stdlib.h>
-#include <vfs.h>
 
 vfs_driver_t driver = (vfs_driver_t) {
     .walk = tmpfs_walk,

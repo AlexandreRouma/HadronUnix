@@ -70,7 +70,6 @@ int vfs_unmount(vfs_vnode_t* mountpoint);
 vfs_vnode_t* vfs_ref(vfs_vnode_t *vnode);
 void vfs_unref(vfs_vnode_t *vnode);
 
-/* Do NOT (!) call these 2 directly :)) */
 vfs_driver_t* vfs_driver_ref(vfs_driver_t *driver);
 void vfs_driver_unref(vfs_driver_t *drive);
 

@@ -17,14 +17,12 @@ start:
     xor ax, ax
     mov ds, ax
     mov es, ax
-
-    ; Save boot data
-    mov [drive_number], dl
-
-    ; Set segment registers
     mov fs, ax
     mov gs, ax
     mov ss, ax
+
+    ; Save boot data
+    mov [drive_number], dl
 
     ; Prepare the stack
     mov sp, 7B00h
